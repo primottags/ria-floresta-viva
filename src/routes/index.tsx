@@ -1,23 +1,139 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute } from '@tanstack/react-router';
+import { useQuery } from '@tanstack/react-query';
+import { useEffect, useMemo, useRef, useState, type KeyboardEvent, type PointerEvent } from 'react';
+import { ArrowRight, ChevronDown, MapPin, RotateCcw, Share2, Sprout } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Canopy, Landscape } from '@/components/forest/Landscape';
+import { CONSENT, canRecord, forestAt, insertResearch, isAdult, isPrototype, normalize, referenceYear, responseCode, type ForestData, type Municipality, type Residence } from '@/lib/research';
+import { createShareCard } from '@/lib/share-card';
 
-// The home route ships no og:image, so serve-time hosting can inject the
-// project's social preview (explicit og:image or latest screenshot).
-export const Route = createFileRoute("/")({
+export const Route = createFileRoute('/')({
+  head: () => ({ meta: [
+    { title: 'A floresta da sua infância · Pará' },
+    { name: 'description', content: 'Lembre quanta floresta havia no seu município do Pará quando você tinha 10 anos e compare com os dados do MapBiomas.' },
+    { property: 'og:title', content: 'A floresta da sua infância' },
+    { property: 'og:description', content: 'Quanta floresta você viu crescendo? Faça seu chute e descubra os dados do MapBiomas.' },
+    { property: 'og:type', content: 'website' }, { name: 'twitter:card', content: 'summary_large_image' },
+  ] }),
   component: Index,
 });
 
-// IMPORTANT: Replace this placeholder. See ./README.md for routing conventions.
+type Step = 'start' | 'place' | 'birth' | 'guess' | 'today' | 'residence' | 'reveal';
+const years = Array.from({ length: 86 }, (_, i) => 1930 + i);
+
 function Index() {
-  return (
-    <div
-      className="flex min-h-screen items-center justify-center"
-      style={{ backgroundColor: "#fcfbf8" }}
-    >
-      <img
-        data-lovable-blank-page-placeholder="REMOVE_THIS"
-        src="https://cdn.gpteng.co/blank-app-v1.svg"
-        alt="Your app will live here!"
-      />
+  const [step, setStep] = useState<Step>('start');
+  const [agreed, setAgreed] = useState(false);
+  const [consented, setConsented] = useState(false);
+  const [exploring, setExploring] = useState(false);
+  const [place, setPlace] = useState<Municipality>();
+  const [birth, setBirth] = useState<number>();
+  const [guess, setGuess] = useState<number>();
+  const [todayGuess, setTodayGuess] = useState<number | null>(null);
+  const [residence, setResidence] = useState<Residence | null>(null);
+  const [prototype, setPrototype] = useState(true);
+  const main = useRef<HTMLElement>(null);
+  const data = useQuery({ queryKey: ['forest-data'], queryFn: async () => { const r = await fetch('/dados_pagina.json'); if (!r.ok) throw new Error('Dados indisponíveis'); return r.json() as Promise<ForestData>; } });
+  useEffect(() => setPrototype(isPrototype(window.location.hostname)), []);
+  useEffect(() => { main.current?.focus(); window.scrollTo({ top: 0, behavior: 'smooth' }); }, [step]);
+  const go = (next: Step) => setStep(next);
+  const startExplore = () => { setExploring(true); setPlace(undefined); setGuess(undefined); setTodayGuess(null); setResidence(null); go('place'); };
+
+  return <div className="app-shell">
+    {prototype && <div className="prototype-strip" role="status">Protótipo para testes: nenhuma resposta é gravada</div>}
+    <main ref={main} tabIndex={-1} className="outline-none">
+      {step === 'start' && <Start agreed={agreed} setAgreed={setAgreed} begin={() => { setConsented(true); setExploring(false); go('place'); }} explore={() => { setConsented(false); startExplore(); }} />}
+      {step !== 'start' && <QuestionFrame step={step} exploring={exploring}>
+        {step === 'place' && <PlaceQuestion data={data.data} loading={data.isLoading} error={data.isError} exploring={exploring} onChoose={(m) => { setPlace(m); go(birth ? 'guess' : 'birth'); }} onOutside={() => { setExploring(true); }} />}
+        {step === 'birth' && place && <BirthQuestion birth={birth} consented={consented && !exploring} onNext={(y) => { setBirth(y); go('guess'); }} />}
+        {step === 'guess' && place && birth && <GuessQuestion key="childhood" title={<>Feche os olhos e lembre de <b>{place[0]}</b> em <b>{referenceYear(birth)}</b>, quando você tinha {referenceYear(birth) - birth} anos. De cada 100 pedaços de terra do município, quantos você acha que eram floresta?</>} help="Vale mata de terra firme, de várzea e mangue. Não vale pasto, roça, cidade nem campo natural. Não tem resposta errada: queremos saber o que você lembra." action="Confirmar meu chute" onConfirm={(v) => { setGuess(v); go('today'); }} />}
+        {step === 'today' && place && <GuessQuestion key="today" title={<>E hoje, quanto de <b>{place[0]}</b> você acha que ainda é floresta?</>} help="Esta pergunta é opcional." action="Confirmar" skip={() => { setTodayGuess(null); go('residence'); }} onConfirm={(v) => { setTodayGuess(v); go('residence'); }} />}
+        {step === 'residence' && place && <ResidenceQuestion name={place[0]} onAnswer={(r) => { setResidence(r); go('reveal'); }} />}
+        {step === 'reveal' && place && birth !== undefined && guess !== undefined && <Reveal place={place} birth={birth} guess={guess} todayGuess={todayGuess} residence={residence} consented={consented} exploring={exploring} prototype={prototype} again={startExplore} />}
+      </QuestionFrame>}
+    </main>
+    <footer className="site-footer"><p>Fonte: Projeto MapBiomas, Coleção 11 da Série Anual de Mapas de Cobertura e Uso da Terra do Brasil (1985 a 2025).</p><p>Pesquisa de Priscila Motta Gadelha Silva, engenheira cartógrafa e agrimensora. Trabalho inscrito no 9º Prêmio MapBiomas.</p></footer>
+  </div>;
+}
+
+function Start({ agreed, setAgreed, begin, explore }: { agreed: boolean; setAgreed: (v: boolean) => void; begin: () => void; explore: () => void }) {
+  const terms = useQuery({ queryKey: ['terms'], queryFn: async () => { const r = await fetch('/termo_v1.json'); if (!r.ok) throw new Error('Termo indisponível'); return r.json() as Promise<string[]>; } });
+  return <section className="start-page" aria-labelledby="title">
+    <div className="hero-scene"><header className="start-top"><div className="wordmark"><Sprout aria-hidden="true" /><span>A floresta da<br />sua infância</span></div><div className="award-mark"><strong>9º Prêmio MapBiomas</strong>Categoria Comunicação</div></header><Landscape cover={100} intro /><div className="hero-copy"><p className="eyebrow">Pará · Memória · Paisagem</p><h1 id="title">Quanta floresta você viu crescendo?</h1><p>Uma viagem curta entre o que você lembra e o que os satélites registraram no Pará.</p></div><span className="hero-caption">144 municípios · 41 anos de história · a sua memória</span></div>
+    <div className="consent-panel">
+      <p className="consent-text">{CONSENT}</p>
+      <details className="terms"><summary>Ler o termo completo <ChevronDown aria-hidden="true" /></summary><div>{terms.isLoading && <p>Carregando o termo…</p>}{terms.isError && <p>Não conseguimos carregar o termo agora. Tente recarregar a página.</p>}{terms.data?.map((paragraph) => <p key={paragraph}>{paragraph}</p>)}</div></details>
+      <label className="check-row"><input type="checkbox" checked={agreed} onChange={(e) => setAgreed(e.target.checked)} /><span>Tenho 18 anos ou mais, li o termo e concordo em participar.</span></label>
+      <Button variant="forest" size="xl" disabled={!agreed} onClick={begin}>Começar <ArrowRight aria-hidden="true" /></Button>
+      <Button variant="link" className="text-link" onClick={explore}>Ver só os dados, sem participar</Button>
     </div>
-  );
+  </section>;
+}
+
+function QuestionFrame({ step, exploring, children }: { step: Step; exploring: boolean; children: React.ReactNode }) {
+  const order: Step[] = ['place', 'birth', 'guess', 'today', 'residence', 'reveal'];
+  return <section className="question-page"><div className="question-top"><span className="brand-mark"><Sprout aria-hidden="true" /> A floresta da sua infância</span><span className="step-count">{step === 'reveal' ? 'Revelação' : `Etapa ${order.indexOf(step) + 1} de 5`}</span></div>{exploring && <p className="explore-note" role="status">Modo explorar: esta rodada não será gravada.</p>}{children}</section>;
+}
+
+function PlaceQuestion({ data, loading, error, exploring, onChoose, onOutside }: { data: ForestData | undefined; loading: boolean; error: boolean; exploring: boolean; onChoose: (m: Municipality) => void; onOutside: () => void }) {
+  const [query, setQuery] = useState(''); const [active, setActive] = useState(0);
+  const options = useMemo(() => (data?.m ?? []).filter((m) => normalize(m[0]).includes(normalize(query.trim()))), [data, query]);
+  const total = options.length + (exploring ? 0 : 1);
+  const choose = (i: number) => { const m = options[i]; if (m) onChoose(m); else if (!exploring) { onOutside(); setQuery(''); setActive(0); } };
+  const keys = (e: KeyboardEvent) => { if (e.key === 'ArrowDown') { e.preventDefault(); setActive((a) => Math.min(total - 1, a + 1)); } if (e.key === 'ArrowUp') { e.preventDefault(); setActive((a) => Math.max(0, a - 1)); } if (e.key === 'Enter') { e.preventDefault(); choose(active); } };
+  return <div className="question-card"><h1>{exploring ? 'Qual município do Pará você quer explorar?' : 'Em que município do Pará você morava quando tinha 10 anos?'}</h1><p className="help">{exploring ? 'Escolha qualquer um dos 144 municípios.' : 'Se mudou muito, escolha o lugar que você mais lembra daquela época.'}</p>
+    <label className="field-label" htmlFor="municipio">Digite o nome do município</label><div className="search-box"><MapPin aria-hidden="true" /><input id="municipio" role="combobox" aria-expanded="true" aria-controls="municipios" aria-activedescendant={`opt-${active}`} autoComplete="off" value={query} onChange={(e) => { setQuery(e.target.value); setActive(0); }} onKeyDown={keys} placeholder="Ex.: Maraba" /></div>
+    {loading && <p className="help">Carregando municípios…</p>}{error && <p className="error-text">Não conseguimos carregar os dados. Verifique a internet e tente de novo.</p>}
+    <ul id="municipios" role="listbox" className="option-list" aria-label="Municípios do Pará">{options.map((m, i) => <li id={`opt-${i}`} role="option" aria-selected={i === active} key={m[1]} onMouseEnter={() => setActive(i)} onClick={() => choose(i)}>{m[0]}</li>)}{!exploring && <li id={`opt-${options.length}`} role="option" aria-selected={active === options.length} className="outside-option" onClick={() => choose(options.length)}>Eu não morava no Pará aos 10 anos</li>}</ul>
+    {!loading && options.length === 0 && <p className="help">Nenhum município encontrado com esse nome.</p>}
+  </div>;
+}
+
+function BirthQuestion({ birth, consented, onNext }: { birth: number | undefined; consented: boolean; onNext: (y: number) => void }) {
+  const [year, setYear] = useState(birth ? String(birth) : ''); const y = Number(year); const current = new Date().getFullYear();
+  return <div className="question-card"><h1>Em que ano você nasceu?</h1><label className="field-label" htmlFor="nascimento">Ano de nascimento</label><select id="nascimento" className="year-select" value={year} onChange={(e) => setYear(e.target.value)}><option value="">Escolha o ano</option>{years.map((v) => <option key={v}>{v}</option>)}</select>
+    {year && y + 10 < 1985 && <p className="notice">O MapBiomas começa em 1985. Vamos comparar seu chute com o retrato mais antigo que existe, quando você tinha {1985 - y} anos.</p>}
+    {year && consented && !isAdult(y, current) && <p className="notice">Você pode jogar normalmente, mas como a pesquisa é só para maiores de 18 anos, sua resposta não será gravada.</p>}
+    <Button variant="forest" size="xl" disabled={!year} onClick={() => onNext(y)}>Continuar <ArrowRight aria-hidden="true" /></Button></div>;
+}
+
+function GuessQuestion({ title, help, action, onConfirm, skip }: { title: React.ReactNode; help: string; action: string; onConfirm: (v: number) => void; skip?: () => void }) {
+  const [value, setValue] = useState<number>(); const track = useRef<HTMLDivElement>(null);
+  const update = (e: PointerEvent<HTMLDivElement>) => { if (e.type === 'pointermove' && e.buttons !== 1) return; const box = track.current?.getBoundingClientRect(); if (!box) return; setValue(Math.round(Math.max(0, Math.min(1, (e.clientX - box.left) / box.width)) * 100)); };
+  const key = (e: KeyboardEvent) => { const change: Record<string, number> = { ArrowRight: 1, ArrowUp: 1, ArrowLeft: -1, ArrowDown: -1, PageUp: 10, PageDown: -10 }; if (e.key === 'Home') setValue(0); else if (e.key === 'End') setValue(100); else if (change[e.key] !== undefined) setValue((v) => Math.max(0, Math.min(100, (v ?? 0) + (change[e.key] ?? 0)))); else return; e.preventDefault(); };
+  return <div className="guess-layout"><div className="question-card guess-copy"><h1>{title}</h1><p className="help">{help}</p></div><div className="guess-scene" onPointerDown={(e) => { e.currentTarget.setPointerCapture(e.pointerId); const r = e.currentTarget.getBoundingClientRect(); setValue(Math.round(Math.max(0, Math.min(100, 100 - (e.clientY - r.top) / r.height * 100)))); }} onPointerMove={(e) => { if (e.buttons !== 1) return; const r = e.currentTarget.getBoundingClientRect(); setValue(Math.round(Math.max(0, Math.min(100, 100 - (e.clientY - r.top) / r.height * 100)))); }}><Landscape cover={value ?? 0} emptyLabel={value === undefined} /><div className="guess-number" aria-live="polite">{value === undefined ? 'Toque para começar' : <><strong>{value}</strong><span>de 100</span></>}</div></div>
+    <div className="planting-control"><p className="field-label" id="guess-label">Arraste para plantar floresta</p><div ref={track} className="planting-track" role="slider" tabIndex={0} aria-labelledby="guess-label" aria-valuemin={0} aria-valuemax={100} aria-valuenow={value} aria-valuetext={value === undefined ? 'Ainda sem resposta' : `${value} de cada 100 pedaços eram floresta`} onPointerDown={(e) => { e.currentTarget.setPointerCapture(e.pointerId); update(e); }} onPointerMove={update} onKeyDown={key}><span className="track-fill" style={{ width: `${value ?? 0}%` }} />{value !== undefined && <span className="track-thumb" style={{ left: `${value}%` }} />}</div><div className="track-labels" aria-hidden="true"><span>nenhuma</span><span>toda</span></div>
+      <label className="number-alt">Ou digite um número de 0 a 100<input inputMode="numeric" type="number" min="0" max="100" value={value ?? ''} onChange={(e) => setValue(e.target.value === '' ? undefined : Math.max(0, Math.min(100, Math.round(Number(e.target.value)))))} /></label>
+      <div className="canopy-grid" aria-hidden="true">{Array.from({ length: 100 }, (_, i) => <Canopy key={i} filled={value !== undefined && i < value} />)}</div><p className="grid-caption">De cada 100 pedaços de terra, {value === undefined ? 'quantos eram floresta?' : `${value} seriam floresta`}</p>
+      <Button variant="memory" size="xl" disabled={value === undefined} onClick={() => value !== undefined && onConfirm(value)}>{action}</Button>{skip && <Button variant="quiet" size="xl" onClick={skip}>Pular</Button>}</div></div>;
+}
+
+function ResidenceQuestion({ name, onAnswer }: { name: string; onAnswer: (r: Residence | null) => void }) {
+  const options: [Residence, string][] = [['sim', 'Sim, moro lá'], ['visita', 'Não, mas visito'], ['saiu', 'Não, saí de lá']];
+  return <div className="question-card"><h1>Você ainda mora em {name}?</h1><p className="help">Esta pergunta é opcional.</p><div className="choice-stack">{options.map(([v, label]) => <Button key={v} variant="choice" size="xl" onClick={() => onAnswer(v)}>{label}</Button>)}<Button variant="quiet" size="xl" onClick={() => onAnswer(null)}>Pular</Button></div></div>;
+}
+
+function Reveal({ place, birth, guess, todayGuess, residence, consented, exploring, prototype, again }: { place: Municipality; birth: number; guess: number; todayGuess: number | null; residence: Residence | null; consented: boolean; exploring: boolean; prototype: boolean; again: () => void }) {
+  const ref = referenceYear(birth); const past = forestAt(place, ref); const today = forestAt(place, 2025);
+  const [year, setYear] = useState(ref); const [done, setDone] = useState(false); const [code, setCode] = useState<string>(); const [record, setRecord] = useState<'checking' | 'saved' | 'duplicate' | 'off' | 'prototype' | 'error'>('checking'); const [shareStatus, setShareStatus] = useState(''); const sent = useRef(false);
+  useEffect(() => { if (window.matchMedia('(prefers-reduced-motion: reduce)').matches || ref === 2025) { setYear(2025); setDone(true); return; } const start = performance.now(); const duration = Math.min(7000, Math.max(2200, (2025 - ref) * 180)); let frame = 0; const tick = (now: number) => { const t = Math.min(1, (now - start) / duration); setYear(Math.round(ref + (2025 - ref) * t)); if (t < 1) frame = requestAnimationFrame(tick); else setDone(true); }; frame = requestAnimationFrame(tick); return () => cancelAnimationFrame(frame); }, [ref]);
+  useEffect(() => { if (sent.current) return; sent.current = true; let duplicate = true; try { duplicate = localStorage.getItem('floresta_respondeu') !== null; } catch { /* Without storage, fail closed to avoid duplicate collection. */ } const eligible = canRecord(consented, birth, new Date().getFullYear(), exploring, duplicate); const id = responseCode(); setCode(id); if (!eligible) { setRecord(duplicate && consented && !exploring && isAdult(birth, new Date().getFullYear()) ? 'duplicate' : 'off'); return; } if (prototype) { setRecord('prototype'); return; } const origin = new URLSearchParams(window.location.search).get('utm_source') || 'direto'; insertResearch('respostas', { id_resposta: id, versao_questionario: 'v1', cod_ibge_municipio: place[1], ano_nascimento: birth, ano_referencia: ref, chute_infancia_pct: guess, chute_hoje_pct: todayGuess, ainda_mora: residence, real_infancia_pct: past, real_hoje_pct: today, colecao_mapbiomas: '11', origem: origin }).then(() => { try { localStorage.setItem('floresta_respondeu', '1'); } catch { /* The response already reached the service; do not retry. */ } setRecord('saved'); }).catch(() => setRecord('error')); }, []);
+  const diff = guess - Math.round(past); const diffText = diff === 0 ? 'Seu chute acertou em cheio.' : `Seu chute ficou ${Math.abs(diff)} ${Math.abs(diff) === 1 ? 'ponto' : 'pontos'} ${diff > 0 ? 'acima' : 'abaixo'}.`;
+  const share = async () => { try { setShareStatus('Preparando seu cartão…'); const file = await createShareCard(place[0], ref, guess, past, today); if (navigator.canShare?.({ files: [file] })) { await navigator.share({ files: [file], title: 'A floresta da sua infância', text: 'E você, quanta floresta lembra?' }); setShareStatus('Cartão compartilhado.'); if (!prototype && consented && !exploring && isAdult(birth, new Date().getFullYear()) && (record === 'saved' || record === 'error')) await insertResearch('compartilhamentos', { id_resposta: record === 'saved' ? code : null, rede: 'web-share' }).catch(() => undefined); } else { const url = URL.createObjectURL(file); const a = document.createElement('a'); a.href = url; a.download = file.name; a.click(); URL.revokeObjectURL(url); setShareStatus('A imagem foi baixada.'); } } catch (e) { setShareStatus(e instanceof DOMException && e.name === 'AbortError' ? '' : 'Não foi possível preparar o cartão agora.'); } };
+  return <div className="reveal-page"><div className="reveal-scene"><Landscape cover={forestAt(place, year)} ghost={guess} stumps /><span className="mobile-memory">Sua memória · {guess}%</span><div className="year-counter" aria-hidden="true"><span>{year}</span><strong>{Math.round(forestAt(place, year))}%</strong><small>floresta medida</small></div></div>
+    <div className="reveal-copy"><p className="eyebrow">Memória x satélite</p><h1 aria-live="polite">{done ? `Em ${ref}, ${Math.round(past)}% de ${place[0]} era floresta.` : `Viajando de ${ref} até 2025…`}</h1>{done && <><p className="reveal-sentence">{diffText} Hoje são {Math.round(today)}%.</p><div className="stat-row"><Stat label="Sua lembrança" value={guess} tone="memory" /><Stat label={`Real em ${ref}`} value={past} tone="forest" /><Stat label="Real em 2025" value={today} tone="earth" /></div><p className="method-note">Os dados usam os limites atuais do município. Se ele foi criado depois de 1985, mostramos o mesmo território antes da emancipação.</p><RecordNotice status={record} code={code} /><SeriesChart series={place[2]} guess={guess} ref={ref} todayGuess={todayGuess} /><div className="action-stack"><Button variant="forest" size="xl" onClick={share}><Share2 aria-hidden="true" /> Compartilhar cartão</Button><Button variant="quiet" size="xl" onClick={again}><RotateCcw aria-hidden="true" /> Explorar outro município</Button><p role="status" className="help">{shareStatus}</p></div></>}</div></div>;
+}
+
+function Stat({ label, value, tone }: { label: string; value: number; tone: string }) { return <div className={`stat stat-${tone}`}><span>{label}</span><strong>{Math.round(value)}%</strong></div>; }
+function RecordNotice({ status, code }: { status: string; code: string | undefined }) {
+  if (status === 'saved') return <p className="record-box">Seu código de resposta é <strong>{code}</strong>. Guarde se quiser pedir a exclusão depois.</p>;
+  if (status === 'prototype') return <p className="record-box">No site oficial esta resposta seria gravada com o código <strong>{code}</strong>.</p>;
+  if (status === 'duplicate') return <p className="record-box">Você já respondeu neste aparelho, então esta rodada não foi gravada.</p>;
+  if (status === 'error') return <p className="record-box error-text">Não conseguimos guardar sua resposta agora. Você ainda pode ver e compartilhar seu resultado.</p>;
+  if (status === 'off') return <p className="record-box">Esta rodada não foi gravada.</p>;
+  return null;
+}
+function SeriesChart({ series, guess, ref, todayGuess }: { series: number[]; guess: number; ref: number; todayGuess: number | null }) {
+  const x = (year: number) => 38 + (year - 1985) * 7.6; const y = (v: number) => 205 - v * 1.75; const line = series.map((v, i) => `${i ? 'L' : 'M'}${x(1985 + i)} ${y(v)}`).join(' ');
+  return <figure className="series-chart"><figcaption>Floresta medida de 1985 a 2025</figcaption><svg viewBox="0 0 360 240" role="img" aria-label={`Gráfico da floresta medida. Em 1985, ${Math.round(series[0] ?? 0)}%. Em ${ref}, ${Math.round(series[ref - 1985] ?? 0)}%. Em 2025, ${Math.round(series[40] ?? 0)}%. Seu chute foi ${guess}%.`}>{[0, 50, 100].map((v) => <g key={v}><path className="chart-grid" d={`M38 ${y(v)}H342`} /><text className="chart-label" x="4" y={y(v) + 5}>{v}%</text></g>)}<path className="chart-area" d={`${line} L342 205 L38 205Z`} /><path className="chart-line" d={line} /><circle className="chart-real" cx={x(ref)} cy={y(series[ref - 1985] ?? 0)} r="7" /><circle className="chart-guess" cx={x(ref)} cy={y(guess)} r="8" /><circle className="chart-now" cx={x(2025)} cy={y(series[40] ?? 0)} r="7" />{todayGuess !== null && <circle className="chart-guess-hollow" cx={x(2025)} cy={y(todayGuess)} r="7" />}<text className="chart-label" x="38" y="232">1985</text><text className="chart-label" x="302" y="232">2025</text></svg><div className="chart-legend"><span><i className="legend-guess" />Seu chute</span><span><i className="legend-real" />Real</span><span><i className="legend-now" />Hoje</span></div></figure>;
 }

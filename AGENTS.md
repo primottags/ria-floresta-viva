@@ -28,3 +28,9 @@ use the editor.
   own key and store it in Secrets.
 - **Secrets.** Lovable manages them. Do not put secret values in the repo.
 <!-- LOVABLE:END -->
+
+## Application rules
+- Keep this experience on the index route with an explicit questionnaire state machine, so confirmed guesses cannot be edited or exposed early.
+- Fetch the unmodified research JSON files from public at runtime; keep eligibility and reference-year calculations in a tested browser-safe research module.
+- Use browser-only insert REST requests to the existing research endpoint and gate all writes by published hostname, consent, adulthood, exploration state, and duplicate marker; no backend infrastructure is provisioned here.
+- Keep landscape artwork and visual styling in reusable SVG components and semantic global design tokens, so the questionnaire and share card remain consistent.
