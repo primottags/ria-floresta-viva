@@ -1,10 +1,11 @@
-import { createFileRoute } from '@tanstack/react-router';
+import { createFileRoute, Link } from '@tanstack/react-router';
 import { useQuery } from '@tanstack/react-query';
 import { useEffect, useMemo, useRef, useState, type KeyboardEvent, type PointerEvent } from 'react';
 import { ArrowRight, ChevronDown, MapPin, RotateCcw, Share2, Sprout } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Landscape, MEMORY_OPTIONS } from '@/components/forest/Landscape';
 import { IsoPlot } from '@/components/forest/IsoPlot';
+import { RealMap } from '@/components/forest/RealMap';
 import { CONSENT, canRecord, forestAt, insertResearch, isAdult, isPrototype, normalize, referenceYear, responseCode, type ForestData, type Municipality, type Residence, ufOf } from '@/lib/research';
 import { createShareCard } from '@/lib/share-card';
 
@@ -71,6 +72,7 @@ function Start({ agreed, setAgreed, begin, explore }: { agreed: boolean; setAgre
       <label className="check-row"><input type="checkbox" checked={agreed} onChange={(e) => setAgreed(e.target.checked)} /><span>Tenho 18 anos ou mais, li o termo e concordo em participar.</span></label>
       <Button variant="forest" size="xl" disabled={!agreed} onClick={begin}>Começar <ArrowRight aria-hidden="true" /></Button>
       <Button variant="link" className="text-link" onClick={explore}>Ver só os dados, sem participar</Button>
+      <Link to="/sala" className="text-link">Sou professor(a): modo sala de aula</Link>
     </div>
   </section>;
 }
@@ -132,13 +134,6 @@ function Reveal({ place, birth, guess, memories, todayGuess, futureGuess, reside
 }
 
 /** Mapa real do MapBiomas (tira com um quadro por ano, gerada por pesquisa/mapas/gerar_mapas.py). Sem mapa, mostra o bloco 3D com o valor medido. */
-function RealMap({ cod, year, fallback }: { cod: number; year: number; fallback: number }) {
-  const index = useQuery({ queryKey: ['map-index'], queryFn: async () => { const r = await fetch('/mapas/indice.json'); if (!r.ok) return {} as Record<string, [number, number]>; return r.json() as Promise<Record<string, [number, number]>>; }, staleTime: Infinity });
-  const size = index.data?.[String(cod)];
-  if (!size) return <IsoPlot cover={fallback} />;
-  const frames = 41; const frame = Math.max(0, Math.min(frames - 1, year - 1985));
-  return <div className="real-map" style={{ aspectRatio: `${size[0]} / ${size[1]}`, backgroundImage: `url(/mapas/${cod}.png)`, backgroundSize: `100% ${frames * 100}%`, backgroundPositionY: `${(frame / (frames - 1)) * 100}%` }}><span className="map-legend"><span><i className="lg-forest" />floresta</span><span><i className="lg-other" />outros usos</span><span><i className="lg-water" />água</span></span></div>;
-}
 
 function Stat({ label, value, tone }: { label: string; value: number; tone: string }) { return <div className={`stat stat-${tone}`}><span>{label}</span><strong>{Math.round(value)}%</strong></div>; }
 function RecordNotice({ status, code }: { status: string; code: string | undefined }) {
