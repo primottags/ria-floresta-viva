@@ -11,7 +11,7 @@ O contorno do município (IBGE) aparece em branco.
 
 Como rodar (no Colab ou em computador com acesso ao Google Earth Engine):
 
-    pip install earthengine-api requests
+    pip install earthengine-api requests pillow
     earthengine authenticate
     python gerar_fotos.py --projeto SEU-PROJETO --so 1502954   # teste
     python gerar_fotos.py --projeto SEU-PROJETO                # todos
@@ -19,11 +19,12 @@ Como rodar (no Colab ou em computador com acesso ao Google Earth Engine):
 Grava <saida>/<cod_ibge>.jpg e <saida>/indice.json ({cod: [largura, altura_do_quadro]}).
 Pode parar e rodar de novo: pula o que já existe.
 """
-import argparse, json, pathlib, sys, time
+import argparse, io, json, pathlib, sys, time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 import ee
 import requests
+from PIL import Image
 
 ANOS = [1985, 1990, 1995, 2000, 2005, 2010, 2015, 2020, 2025]
 IBGE = "https://servicodados.ibge.gov.br/api/v3/malhas/municipios/{cod}?formato=application/vnd.geo%2Bjson&qualidade=intermediaria"
@@ -73,17 +74,21 @@ def tira(cod, dimensao):
     regiao = geom.bounds()
     contorno = ee.Image().byte().paint(ee.FeatureCollection([ee.Feature(geom)]), 1, 2).visualize(palette=["ffffff"], opacity=0.85)
     colecao = ee.ImageCollection([quadro(ano, regiao, contorno) for ano in ANOS])
-    url = colecao.getFilmstripThumbURL({"dimensions": dimensao, "region": regiao, "format": "jpg", "crs": "EPSG:3857"})
+    url = colecao.getFilmstripThumbURL({"dimensions": dimensao, "region": regiao, "format": "png", "crs": "EPSG:3857"})
     r = requests.get(url, timeout=600)
-    r.raise_for_status()
-    return r.content
+    if not r.ok:
+        raise RuntimeError(f"{r.status_code}: {r.text[:300]}")
+    # O filmstrip só sai em PNG; JPEG fica bem menor para foto.
+    saida = io.BytesIO()
+    Image.open(io.BytesIO(r.content)).convert("RGB").save(saida, "JPEG", quality=78, optimize=True, progressive=True)
+    return saida.getvalue()
 
 
 def tamanho_jpg(dados):
     i = 2
     while i < len(dados):
         marcador, tam = dados[i + 1], int.from_bytes(dados[i + 2:i + 4], "big")
-        if marcador in (0xC0, 0xC2):
+        if marcador in (0xC0, 0xC1, 0xC2):
             return int.from_bytes(dados[i + 7:i + 9], "big"), int.from_bytes(dados[i + 5:i + 7], "big")
         i += 2 + tam
     raise ValueError("JPEG sem cabeçalho de tamanho")
