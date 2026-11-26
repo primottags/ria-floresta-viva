@@ -162,6 +162,7 @@ h1, h2, h3 { font-family: var(--font-display); line-height: 1.15; font-weight: 6
 .option-list { list-style:none; margin:12px 0; padding:0; max-height:290px; overflow:auto; border:1px solid var(--border); border-radius:6px; }
 .option-list li { padding:12px 18px; min-height:50px; cursor:pointer; }
 .option-list li[aria-selected=true], .option-list li:hover { background:var(--secondary); }
+.option-uf { margin-left:6px; font-size:.85em; font-weight:700; letter-spacing:.04em; color:var(--muted-foreground); }
 .option-list .outside-option { border-top:1px solid var(--border); font-size:16px; }
 .year-select { display:block; height:58px; width:100%; max-width:320px; border:1.5px solid var(--border); border-radius:6px; background:var(--card); padding:0 15px; margin-bottom:24px; }
 .notice { background:var(--secondary); padding:18px; border-left:3px solid var(--primary); margin:20px 0; font-size:17px; }

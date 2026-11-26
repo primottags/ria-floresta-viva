@@ -4,13 +4,13 @@ import { useEffect, useMemo, useRef, useState, type KeyboardEvent, type PointerE
 import { ArrowRight, ChevronDown, MapPin, RotateCcw, Share2, Sprout } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Canopy, Landscape } from '@/components/forest/Landscape';
-import { CONSENT, canRecord, forestAt, insertResearch, isAdult, isPrototype, normalize, referenceYear, responseCode, type ForestData, type Municipality, type Residence } from '@/lib/research';
+import { CONSENT, canRecord, forestAt, insertResearch, isAdult, isPrototype, normalize, referenceYear, responseCode, type ForestData, type Municipality, type Residence, ufOf } from '@/lib/research';
 import { createShareCard } from '@/lib/share-card';
 
 export const Route = createFileRoute('/')({
   head: () => ({ meta: [
-    { title: 'A floresta da sua infância · Pará' },
-    { name: 'description', content: 'Lembre quanta floresta havia no seu município do Pará quando você tinha 10 anos e compare com os dados do MapBiomas.' },
+    { title: 'A floresta da sua infância · Amazônia' },
+    { name: 'description', content: 'Lembre quanta floresta havia no seu município da Amazônia quando você tinha 10 anos e compare com os dados do MapBiomas.' },
     { property: 'og:title', content: 'A floresta da sua infância' },
     { property: 'og:description', content: 'Quanta floresta você viu crescendo? Faça seu chute e descubra os dados do MapBiomas.' },
     { property: 'og:type', content: 'website' }, { name: 'twitter:card', content: 'summary_large_image' },
@@ -59,7 +59,7 @@ function Index() {
 function Start({ agreed, setAgreed, begin, explore }: { agreed: boolean; setAgreed: (v: boolean) => void; begin: () => void; explore: () => void }) {
   const terms = useQuery({ queryKey: ['terms'], queryFn: async () => { const r = await fetch('/termo_v1.json'); if (!r.ok) throw new Error('Termo indisponível'); return r.json() as Promise<string[]>; } });
   return <section className="start-page" aria-labelledby="title">
-    <div className="hero-scene"><header className="start-top"><div className="wordmark"><Sprout aria-hidden="true" /><span>A floresta da<br />sua infância</span></div><div className="award-mark"><strong>9º Prêmio MapBiomas</strong>Categoria Comunicação</div></header><Landscape cover={100} intro /><div className="hero-copy"><p className="eyebrow">Pará · Memória · Paisagem</p><h1 id="title">Quanta floresta você viu crescendo?</h1><p>Uma viagem curta entre o que você lembra e o que os satélites registraram no Pará.</p></div><span className="hero-caption">144 municípios · 41 anos de história · a sua memória</span></div>
+    <div className="hero-scene"><header className="start-top"><div className="wordmark"><Sprout aria-hidden="true" /><span>A floresta da<br />sua infância</span></div><div className="award-mark"><strong>9º Prêmio MapBiomas</strong>Categoria Comunicação</div></header><Landscape cover={100} intro /><div className="hero-copy"><p className="eyebrow">Amazônia · Memória · Paisagem</p><h1 id="title">Quanta floresta você viu crescendo?</h1><p>Uma viagem curta entre o que você lembra e o que os satélites registraram na Amazônia.</p></div><span className="hero-caption">9 estados · 41 anos de história · a sua memória</span></div>
     <div className="consent-panel">
       <p className="consent-text">{CONSENT}</p>
       <details className="terms"><summary>Ler o termo completo <ChevronDown aria-hidden="true" /></summary><div>{terms.isLoading && <p>Carregando o termo…</p>}{terms.isError && <p>Não conseguimos carregar o termo agora. Tente recarregar a página.</p>}{terms.data?.map((paragraph) => <p key={paragraph}>{paragraph}</p>)}</div></details>
@@ -77,14 +77,14 @@ function QuestionFrame({ step, exploring, children }: { step: Step; exploring: b
 
 function PlaceQuestion({ data, loading, error, exploring, onChoose, onOutside }: { data: ForestData | undefined; loading: boolean; error: boolean; exploring: boolean; onChoose: (m: Municipality) => void; onOutside: () => void }) {
   const [query, setQuery] = useState(''); const [active, setActive] = useState(0);
-  const options = useMemo(() => (data?.m ?? []).filter((m) => normalize(m[0]).includes(normalize(query.trim()))), [data, query]);
+  const options = useMemo(() => (data?.m ?? []).filter((m) => normalize(`${m[0]} ${ufOf(m[1])}`).includes(normalize(query.trim()))), [data, query]);
   const total = options.length + (exploring ? 0 : 1);
   const choose = (i: number) => { const m = options[i]; if (m) onChoose(m); else if (!exploring) { onOutside(); setQuery(''); setActive(0); } };
   const keys = (e: KeyboardEvent) => { if (e.key === 'ArrowDown') { e.preventDefault(); setActive((a) => Math.min(total - 1, a + 1)); } if (e.key === 'ArrowUp') { e.preventDefault(); setActive((a) => Math.max(0, a - 1)); } if (e.key === 'Enter') { e.preventDefault(); choose(active); } };
-  return <div className="question-card"><h1>{exploring ? 'Qual município do Pará você quer explorar?' : 'Em que município do Pará você morava quando tinha 10 anos?'}</h1><p className="help">{exploring ? 'Escolha qualquer um dos 144 municípios.' : 'Se mudou muito, escolha o lugar que você mais lembra daquela época.'}</p>
+  return <div className="question-card"><h1>{exploring ? 'Qual município da Amazônia você quer explorar?' : 'Em que município da Amazônia você morava quando tinha 10 anos?'}</h1><p className="help">{exploring ? 'Escolha qualquer município da Amazônia, de qualquer um dos 9 estados.' : 'Se mudou muito, escolha o lugar que você mais lembra daquela época.'}</p>
     <label className="field-label" htmlFor="municipio">Digite o nome do município</label><div className="search-box"><MapPin aria-hidden="true" /><input id="municipio" role="combobox" aria-expanded="true" aria-controls="municipios" aria-activedescendant={`opt-${active}`} autoComplete="off" value={query} onChange={(e) => { setQuery(e.target.value); setActive(0); }} onKeyDown={keys} placeholder="Ex.: Maraba" /></div>
     {loading && <p className="help">Carregando municípios…</p>}{error && <p className="error-text">Não conseguimos carregar os dados. Verifique a internet e tente de novo.</p>}
-    <ul id="municipios" role="listbox" className="option-list" aria-label="Municípios do Pará">{options.map((m, i) => <li id={`opt-${i}`} role="option" aria-selected={i === active} key={m[1]} onMouseEnter={() => setActive(i)} onClick={() => choose(i)}>{m[0]}</li>)}{!exploring && <li id={`opt-${options.length}`} role="option" aria-selected={active === options.length} className="outside-option" onClick={() => choose(options.length)}>Eu não morava no Pará aos 10 anos</li>}</ul>
+    <ul id="municipios" role="listbox" className="option-list" aria-label="Municípios da Amazônia">{options.map((m, i) => <li id={`opt-${i}`} role="option" aria-selected={i === active} key={m[1]} onMouseEnter={() => setActive(i)} onClick={() => choose(i)}>{m[0]} <span className="option-uf">{ufOf(m[1])}</span></li>)}{!exploring && <li id={`opt-${options.length}`} role="option" aria-selected={active === options.length} className="outside-option" onClick={() => choose(options.length)}>Eu não morava na Amazônia aos 10 anos</li>}</ul>
     {!loading && options.length === 0 && <p className="help">Nenhum município encontrado com esse nome.</p>}
   </div>;
 }
