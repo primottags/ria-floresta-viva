@@ -46,8 +46,10 @@ Nenhum dado, modelo ou código do SINFAM foi usado.
 
 ## Ampliação para o bioma Amazônia (26/11/2026)
 
-A página passa a cobrir todos os municípios com alguma área no bioma Amazônia (9 estados: AC, AM, AP, MA, MT, PA, RO, RR, TO), com o Pará como destaque na divulgação. Script: `dados/montar_tabela_amazonia.py`, mesmas classes e mesmo denominador descritos acima.
+Decidido com a Priscila em 26/11/2026: a página cobre os municípios do bioma Amazônia, com o Pará como destaque na divulgação. Mesma fonte (planilha "Biomas, Estados e Municípios", Coleção 11, aba `COVERAGE_11`), mesmas classes e mesmo denominador descritos acima. Script: `pesquisa/dados/montar_tabela_amazonia.py`.
 
-- **Municípios em dois biomas** (Amazônia e Cerrado ou Pantanal): o percentual usa o município inteiro, somando os biomas, como já era feito no Pará. A tabela longa traz `pct_area_amazonia`, a parte do município dentro do bioma.
-- **Arquivo da página** (`public/dados_pagina.json`): `m = [nome, cod_ibge, [floresta_pct de 1985 a 2025]]`. O estado é deduzido dos dois primeiros dígitos do código IBGE.
-- Conferência: rodado só com o recorte do Pará, o script reproduz exatamente os 144 municípios da tabela anterior.
+- **Quem entra:** municípios com pelo menos 10% da área no bioma Amazônia. São **540 municípios em 9 estados**: PA 144, MA 106, MT 92, AM 62, RO 52, TO 31, AC 22, AP 16, RR 15. Ficaram de fora 20 municípios (MA 6, MT 6, TO 8) que só tocam o bioma por lascas de limite, entre 0% e 9% da área.
+- **Municípios em dois biomas** (Amazônia e Cerrado ou Pantanal): o percentual usa o município inteiro, somando os biomas, como já era feito no Pará. A tabela longa traz `pct_area_amazonia`. 439 municípios têm 99,9% ou mais da área no bioma.
+- **Arquivo da página** (`dados_pagina.json`, 151 KB): `m = [nome, cod_ibge, [floresta_pct de 1985 a 2025]]`, com o Pará primeiro. O estado sai dos dois primeiros dígitos do código IBGE. Há nomes repetidos em estados diferentes (Rio Branco, Presidente Médici, Pau D'Arco, Araguanã), por isso a busca mostra a sigla do estado.
+- **Conferência:** os 144 municípios do Pará saem idênticos aos da tabela anterior. No conjunto dos 540 municípios, o indicador `floresta` vai de 89,9% em 1985 para 76,7% em 2025. A mediana de perda por município é de 27,4 pontos percentuais. Maiores perdas: Eldorado do Carajás/PA (85,3), Buritis/RO (83,2), Tucumã/PA (80,9), São Domingos do Araguaia/PA (76,0), Urupá/RO (70,4).
+- Arquivos: a tabela longa `floresta_municipios_amazonia.csv` (pasta do projeto) (formato longo, município × ano) e `dados/dados_pagina_amazonia.json`.

@@ -7,7 +7,7 @@ Trabalho inscrito no **9º Prêmio MapBiomas**, categoria Comunicação. Autora:
 ## Como funciona
 
 1. Consentimento (só maiores de 18 anos; quem não aceita usa o modo explorar, que não grava nada).
-2. Município da infância (municípios do bioma Amazônia, em 9 estados) e ano de nascimento.
+2. Município da infância (540 municípios do bioma Amazônia, em 9 estados) e ano de nascimento.
 3. Chute de quanta floresta havia aos 10 anos, numa barra que começa sem valor para não puxar a resposta para o meio.
 4. Chute de hoje e "ainda mora lá?" (opcionais).
 5. Revelação: a paisagem viaja do ano dos 10 anos até 2025 com a série real do município, e o chute fica marcado para comparar.
