@@ -49,17 +49,21 @@ def preparar(img, bandas):
     qa = img.select("QA_PIXEL")
     limpo = qa.bitwiseAnd(0b11010).eq(0)  # bits 1 (nuvem dilatada), 3 (nuvem) e 4 (sombra)
     rgb = img.select(bandas, ["r", "g", "b"]).multiply(0.0000275).add(-0.2)
-    return rgb.updateMask(limpo)
+    return rgb.updateMask(limpo).copyProperties(img, ["system:time_start"])
 
 
 def landsat(regiao, inicio, fim):
-    l5 = ee.ImageCollection("LANDSAT/LT05/C02/T1_L2").map(lambda i: preparar(i, ["SR_B3", "SR_B2", "SR_B1"]))
-    l7 = ee.ImageCollection("LANDSAT/LE07/C02/T1_L2").filterDate("1999-01-01", "2003-05-31").map(lambda i: preparar(i, ["SR_B3", "SR_B2", "SR_B1"]))
-    l8 = ee.ImageCollection("LANDSAT/LC08/C02/T1_L2").map(lambda i: preparar(i, ["SR_B4", "SR_B3", "SR_B2"]))
-    l9 = ee.ImageCollection("LANDSAT/LC09/C02/T1_L2").map(lambda i: preparar(i, ["SR_B4", "SR_B3", "SR_B2"]))
-    todas = l5.merge(l7).merge(l8).merge(l9)
-    return (todas.filterBounds(regiao).filterDate(inicio, fim)
-            .filter(ee.Filter.calendarRange(6, 9, "month")).median())
+    # Filtra antes de transformar: a aritmética descarta as datas das cenas.
+    def colecao(nome, bandas, de=None, ate=None):
+        c = ee.ImageCollection(nome).filterBounds(regiao).filterDate(de or inicio, ate or fim)
+        c = c.filter(ee.Filter.calendarRange(6, 9, "month"))
+        return c.map(lambda i: preparar(i, bandas))
+    antigas = ["SR_B3", "SR_B2", "SR_B1"]; novas = ["SR_B4", "SR_B3", "SR_B2"]
+    todas = (colecao("LANDSAT/LT05/C02/T1_L2", antigas)
+             .merge(colecao("LANDSAT/LE07/C02/T1_L2", antigas).filterDate("1999-01-01", "2003-05-31"))
+             .merge(colecao("LANDSAT/LC08/C02/T1_L2", novas))
+             .merge(colecao("LANDSAT/LC09/C02/T1_L2", novas)))
+    return todas.median()
 
 
 def quadro(ano, regiao, contorno):
