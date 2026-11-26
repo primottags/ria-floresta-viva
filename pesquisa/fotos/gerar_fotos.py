@@ -64,7 +64,7 @@ def landsat(regiao, inicio, fim):
              .merge(colecao("LANDSAT/LC08/C02/T1_L2", novas))
              .merge(colecao("LANDSAT/LC09/C02/T1_L2", novas))
              # Uma imagem vazia (toda mascarada) garante as bandas r, g, b mesmo sem nenhuma cena.
-             .merge(ee.ImageCollection([preparar(ee.Image(ee.ImageCollection("LANDSAT/LC08/C02/T1_L2").filterDate("2020-08-01", "2020-08-02").first()), novas).updateMask(ee.Image(0))])))
+             .merge(ee.ImageCollection([ee.Image(preparar(ee.Image(ee.ImageCollection("LANDSAT/LC08/C02/T1_L2").filterDate("2020-08-01", "2020-08-02").first()), novas)).updateMask(ee.Image(0))])))
     return todas.median()
 
 
