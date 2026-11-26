@@ -4,7 +4,8 @@ Fonte: MapBiomas Brasil, Coleção 11, Cobertura 30m, estatísticas
 "Biomas, Estados e Municípios" (MAPBIOMAS_BRAZIL-COL.11-BIOME_STATE_MUNICIPALITY), aba COVERAGE_11.
 Uso: python montar_tabela_amazonia.py <arquivo .zip, .xlsx ou .csv> <pasta de saída>
 
-Regra de inclusão: entra todo município com alguma área no bioma Amazônia.
+Regra de inclusão: entra todo município com pelo menos 10% da área no bioma Amazônia
+(abaixo disso são lascas de limite, de 0% a 9%, em municípios do Cerrado).
 Para municípios que cruzam dois biomas (Amazônia + Cerrado ou Pantanal), o percentual
 usa o município inteiro (soma dos biomas), como já era feito no Pará; a coluna
 pct_area_amazonia mostra quanto do município está no bioma.
@@ -18,6 +19,7 @@ FLORESTA = {3, 4, 5, 6, 7, 49}
 FORMACAO_FLORESTAL = {3}
 VEG_NATIVA = {3, 4, 5, 6, 7, 49, 10, 11, 12, 29, 32, 50, 77, 84}
 AGUA = {26, 33, 31}
+MIN_PCT_AMAZONIA = 10
 UF = {"Rondônia": "RO", "Acre": "AC", "Amazonas": "AM", "Roraima": "RR", "Pará": "PA", "Amapá": "AP",
       "Tocantins": "TO", "Maranhão": "MA", "Mato Grosso": "MT"}
 
@@ -55,6 +57,8 @@ def main(entrada, saida):
         uf = UF.get(estado, estado)
         t_ult = float(total.loc[idx, anos[-1]])
         pct_amz = round(100 * float(area_amz.loc[idx]) / t_ult, 1)
+        if pct_amz < MIN_PCT_AMAZONIA:
+            continue
         serie_pct = []
         for a in anos:
             ano = int(str(a).lstrip("y")); t = float(total.loc[idx, a])
