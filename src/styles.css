@@ -410,3 +410,37 @@ details.number-alt label { display:flex; justify-content:center; align-items:cen
 .testimony h2 { font-family: var(--font-display); font-size: 1.35rem; }
 .testimony button { justify-self: start; }
 .testimony-done { margin: 1.5rem 0; }
+/* Painel público "O que a Amazônia lembra" */
+.panel-page h1 { font-family: var(--font-display); font-size: clamp(2rem, 6vw, 3.2rem); line-height: 1.05; margin: .25rem 0 .75rem; }
+.memory-panel { display: grid; gap: 1.5rem; margin: 1.5rem 0; }
+.panel-total { display: flex; align-items: center; gap: .5rem; font-size: 1.05rem; }
+.panel-total svg { width: 1.25rem; height: 1.25rem; color: var(--forest); }
+.panel-total b { font-family: var(--font-display); font-size: 1.6rem; }
+.panel-headline { font-family: var(--font-display); font-size: clamp(1.3rem, 3.6vw, 1.75rem); line-height: 1.2; padding: 1rem 1.25rem; border-left: 6px solid var(--memory); background: var(--card); border-radius: var(--radius); }
+.panel-waiting { padding: 1rem 1.25rem; background: var(--muted); border-radius: var(--radius); }
+.panel-title { font-family: var(--font-display); font-size: 1.3rem; margin-bottom: .75rem; display: flex; flex-wrap: wrap; align-items: baseline; gap: .5rem; }
+.panel-title small { font-family: var(--font-sans); font-size: .85rem; color: var(--muted-foreground); font-weight: 400; }
+.panel-list { list-style: none; padding: 0; margin: 0; display: grid; gap: 1.1rem; }
+.panel-row-head { display: flex; justify-content: space-between; gap: 1rem; font-weight: 700; }
+.panel-n { font-weight: 400; color: var(--muted-foreground); font-size: .9rem; }
+.panel-track { position: relative; height: 1.6rem; margin: .4rem .6rem; background: linear-gradient(to right, var(--border) 0 1px, transparent 1px) 0 0 / 25% 100%, var(--muted); border-radius: 999px; }
+.panel-gap { position: absolute; top: 50%; height: 4px; transform: translateY(-50%); background: var(--foreground); opacity: .35; }
+.panel-dot { position: absolute; top: 50%; width: 1.1rem; height: 1.1rem; border-radius: 50%; transform: translate(-50%, -50%); border: 2px solid var(--card); }
+.panel-dot-real, .panel-key .panel-dot-real { background: var(--forest); }
+.panel-dot-memory, .panel-key .panel-dot-memory { background: var(--memory); box-shadow: 0 0 0 1px var(--memory-foreground); }
+.panel-verdict { font-size: .92rem; color: var(--muted-foreground); }
+.panel-verdict b { color: var(--foreground); }
+.panel-more, .panel-less { font-weight: 700; color: var(--foreground); }
+.panel-key { display: flex; flex-wrap: wrap; gap: 1.25rem; font-size: .9rem; }
+.panel-key span { display: inline-flex; align-items: center; gap: .4rem; white-space: nowrap; }
+.panel-key i { display: inline-block; width: .9rem; height: .9rem; border-radius: 50%; }
+.panel-cta { display: inline-flex; align-items: center; justify-content: center; gap: .5rem; min-height: 3.25rem; padding: 0 1.5rem; border-radius: var(--radius); background: var(--primary); color: var(--primary-foreground); font-weight: 700; font-size: 1.1rem; }
+.panel-cta svg { width: 1.2rem; height: 1.2rem; }
+.panel-link { display: block; text-align: center; margin-top: .25rem; }
+.panel-teaser { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: .25rem 1rem; margin: 1.5rem 0; padding: 1rem 1.25rem; border: 2px solid var(--border); border-radius: var(--radius); background: var(--card); color: var(--foreground); }
+.panel-teaser b { font-family: var(--font-display); font-size: 1.2rem; }
+.panel-teaser span { grid-column: 1; color: var(--muted-foreground); }
+.panel-teaser svg { grid-column: 2; grid-row: 1 / span 2; width: 1.4rem; height: 1.4rem; color: var(--forest); }
+.panel-teaser:hover { border-color: var(--forest); }
+.panel-axis { display: flex; justify-content: space-between; margin: 0 .6rem .35rem; font-size: .78rem; color: var(--muted-foreground); }
+.panel-axis span:last-child { transform: translateX(.6rem); }

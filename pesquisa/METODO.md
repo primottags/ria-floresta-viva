@@ -59,3 +59,6 @@ Decidido com a Priscila em 26/11/2026: a página cobre os municípios do bioma A
 - **Depoimentos** (`public.depoimentos`): depois da revelação, quem participou pode escrever até 280 caracteres. Guardamos só o texto, o estado e a década de nascimento, sem o código da resposta, para que o depoimento não possa ser ligado ao município e ao ano exatos. A pessoa marca à parte se o texto pode ser citado sem nome. A página pede para não escrever nomes, telefones ou endereços.
 - **Uso** (`public.uso`): uma linha por abertura da página (`inicio`) e por revelação (`revelacao`, com `modo` participou/explorou), com a origem do link (`utm_source`). Sem IP, cookie ou identificador. Não grava nada no protótipo.
 - Consultas prontas para a inscrição: `pesquisa/analise/numeros_uso.sql`.
+## Painel público "O que a Amazônia lembra" (/painel)
+
+A página mostra, em tempo real, a média dos chutes e a média da floresta medida pelo MapBiomas para cada geração (década de nascimento) e cada estado. As médias são calculadas no banco pela função `painel_publico()` (`pesquisa/painel/painel_publico.sql`), que só devolve grupos com pelo menos 5 respostas (anonimato k ≥ 5). A página nunca lê respostas individuais. A diferença é `chute_infancia_pct − real_infancia_pct`: positiva quando a pessoa lembra mais floresta do que havia.
