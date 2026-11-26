@@ -317,3 +317,5 @@ h1, h2, h3 { font-family: var(--font-display); line-height: 1.15; font-weight: 6
 .why-cards article { padding:20px; border-radius:var(--radius); background:var(--secondary); display:flex; flex-direction:column; gap:10px; min-width:0; }
 .why-cards h3 { font:600 21px var(--font-display); }
 .message-box { width:100%; padding:14px; font:17px var(--font-sans); border:2px solid var(--border); border-radius:var(--radius); background:var(--card); color:var(--foreground); resize:vertical; }
+
+.future-echo { font-size:18px; padding:18px; border-left:4px solid var(--forest); background:var(--card); }

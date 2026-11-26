@@ -8,9 +8,10 @@ Trabalho inscrito no **9º Prêmio MapBiomas**, categoria Comunicação. Autora:
 
 1. Consentimento (só maiores de 18 anos; quem não aceita usa o modo explorar, que não grava nada).
 2. Município da infância (540 municípios do bioma Amazônia, em 9 estados) e ano de nascimento.
-3. Chute de quanta floresta havia aos 10 anos, numa barra que começa sem valor para não puxar a resposta para o meio.
-4. Chute de hoje e "ainda mora lá?" (opcionais).
-5. Revelação: a paisagem viaja do ano dos 10 anos até 2025 com a série real do município, e o chute fica marcado para comparar.
+3. Lembranças da infância (marcadas só para a reflexão, não gravadas) e chute de quanta floresta havia aos 10 anos, numa barra que começa sem valor para não puxar a resposta para o meio.
+4. Chute de hoje, quanto de floresta a pessoa gostaria que houvesse quando uma criança nascida hoje fizer 10 anos, e "ainda mora lá?" (opcionais).
+
+5. Revelação: a paisagem viaja do ano dos 10 anos até 2025 com a série real do município, e o chute fica marcado para comparar. Depois vêm as três gerações no mesmo lugar, o porquê de a gente esquecer e um recado opcional que vai só no cartão de compartilhar.
 
 ## Dados
 

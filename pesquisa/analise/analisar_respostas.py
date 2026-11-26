@@ -42,8 +42,9 @@ def ler(caminho):
             if r.get("versao_questionario", "v1") == "teste":
                 continue
             r = dict(r)
-            for k in ("chute_infancia_pct", "chute_hoje_pct", "real_infancia_pct", "real_hoje_pct"):
+            for k in ("chute_infancia_pct", "chute_hoje_pct", "chute_futuro_pct", "real_infancia_pct", "real_hoje_pct"):
                 r[k] = num(r.get(k))
+            r.setdefault(k, None)
             r["ano_nascimento"] = int(r["ano_nascimento"])
             r["ano_referencia"] = int(r["ano_referencia"])
             r["erro_infancia"] = r["chute_infancia_pct"] - r["real_infancia_pct"]
@@ -61,10 +62,11 @@ def resumir(grupo):
     def m(k):
         v = [g[k] for g in grupo if g[k] is not None]
         return (round(st.mean(v), 1), round(st.median(v), 1), len(v)) if v else (None, None, 0)
-    ei, eh, pr, pl = m("erro_infancia"), m("erro_hoje"), m("perda_real"), m("perda_lembrada")
+    ei, eh, pr, pl, fu = m("erro_infancia"), m("erro_hoje"), m("perda_real"), m("perda_lembrada"), m("chute_futuro_pct")
     return {"n": len(grupo), "erro_infancia_media": ei[0], "erro_infancia_mediana": ei[1],
             "erro_hoje_media": eh[0], "n_com_chute_hoje": eh[2],
             "perda_real_media": pr[0], "perda_lembrada_media": pl[0],
+            "futuro_desejado_media": fu[0], "n_com_futuro": fu[2],
             "pct_subestimou_passado": round(100 * sum(g["erro_infancia"] < 0 for g in grupo) / len(grupo), 1)}
 
 def gravar(caminho, linhas):
@@ -100,7 +102,7 @@ def main(entrada, saida):
            [{"uf": k, **resumir(v)} for k, v in sorted(por_uf.items()) if len(v) >= MIN_GRUPO])
     abertos = [{"cod_ibge_municipio": r["cod_ibge_municipio"], "faixa_nascimento": faixa5(r["ano_nascimento"]),
                 "ano_referencia": r["ano_referencia"], "chute_infancia_pct": r["chute_infancia_pct"],
-                "chute_hoje_pct": r["chute_hoje_pct"], "ainda_mora": r.get("ainda_mora") or "",
+                "chute_hoje_pct": r["chute_hoje_pct"], "chute_futuro_pct": r["chute_futuro_pct"], "ainda_mora": r.get("ainda_mora") or "",
                 "real_infancia_pct": r["real_infancia_pct"], "real_hoje_pct": r["real_hoje_pct"],
                 "versao_questionario": r.get("versao_questionario", "v1")} for r in rows]
     gravar(saida / "dados_abertos.csv", abertos)
