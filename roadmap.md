@@ -4,3 +4,7 @@
 - [x] Revelar série real e gerar cartão compartilhável.
 - [x] Proteger gravação, testar regras e conferir celular e computador.
 Verificação: 15 testes passaram; jornada completa, cartão PNG e celular conferidos; envios publicados validados com respostas simuladas, sem inserir dados na pesquisa real.
+
+## Ajustes solicitados
+- [ ] Garantir legibilidade do título e subtítulo acima das copas no desktop e em 390px.
+- [ ] Registrar downloads de cartões com rede download, preservando as condições de gravação, e verificar os dois caminhos.

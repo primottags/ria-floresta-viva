@@ -16,6 +16,13 @@ describe('gravação por INSERT', () => {
     await insertResearch('respostas', payload);
     expect(fetcher).toHaveBeenCalledWith('https://pdxjejfqzfgnhjsnhivs.supabase.co/rest/v1/respostas', expect.objectContaining({ method: 'POST', credentials: 'omit', body: JSON.stringify(payload), headers: expect.objectContaining({ Prefer: 'return=minimal', 'Content-Type': 'application/json' }) }));
   });
+  it('registra o cartão baixado com rede download e o código da resposta', async () => {
+    const fetcher = vi.fn().mockResolvedValue({ ok: true });
+    vi.stubGlobal('fetch', fetcher);
+    vi.stubGlobal('window', { location: { hostname: 'floresta.exemplo.br' } });
+    await insertResearch('compartilhamentos', { id_resposta: 'ABCD-2345', rede: 'download' });
+    expect(fetcher).toHaveBeenCalledWith('https://pdxjejfqzfgnhjsnhivs.supabase.co/rest/v1/compartilhamentos', expect.objectContaining({ method: 'POST', body: JSON.stringify({ id_resposta: 'ABCD-2345', rede: 'download' }) }));
+  });
   it('sinaliza falha em vez de dizer que gravou', async () => {
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: false })); vi.stubGlobal('window', { location: { hostname: 'floresta.exemplo.br' } });
     await expect(insertResearch('respostas', {})).rejects.toThrow('Não foi possível guardar');
