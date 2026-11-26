@@ -1,5 +1,6 @@
-import { useEffect, useState, useSyncExternalStore } from 'react';
+import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import { Feather, Square, Volume2 } from 'lucide-react';
+import type { NarrationKey } from '@/lib/narration';
 
 const KEY = 'floresta_leve';
 /** Versão leve: sem animações, sem mapas e paisagens desenhadas. Lembrada só neste aparelho. */
@@ -40,22 +41,40 @@ function readableText(root: HTMLElement) {
   return parts.join(' ').replace(/\s+\./g, '.').replace(/\.{2,}/g, '.').replace(/\s+/g, ' ').trim();
 }
 
-/** Barra com "Ouvir esta tela" (voz do próprio aparelho, em português) e a versão leve. */
-export function A11yBar({ target }: { target: () => HTMLElement | null }) {
+/** Lê um texto com a voz do aparelho, em português. */
+function speakText(text: string, done: () => void) {
+  const synth = window.speechSynthesis;
+  const utter = new SpeechSynthesisUtterance(text);
+  utter.lang = 'pt-BR'; utter.rate = 0.95;
+  const voice = synth.getVoices().find((v) => v.lang.toLowerCase().startsWith('pt-br')) ?? synth.getVoices().find((v) => v.lang.toLowerCase().startsWith('pt'));
+  if (voice) utter.voice = voice;
+  utter.onend = done; utter.onerror = done;
+  synth.cancel(); synth.speak(utter);
+}
+
+/**
+ * Barra com "Ouvir esta tela" e a versão leve.
+ * Com `narration`, toca a fala gravada daquela tela (public/vozes/<chave>.mp3) e, se houver,
+ * lê em seguida com a voz do aparelho o que muda de pessoa para pessoa (`extra`).
+ * Sem gravação (ou se o áudio falhar), lê a tela inteira com a voz do aparelho.
+ */
+export function A11yBar({ target, narration, extra }: { target: () => HTMLElement | null; narration?: NarrationKey | undefined; extra?: (() => string) | undefined }) {
   const [light, setLight] = useLightMode();
   const [speaking, setSpeaking] = useState(false);
   const [canSpeak, setCanSpeak] = useState(false);
-  useEffect(() => { setCanSpeak('speechSynthesis' in window); return () => { if ('speechSynthesis' in window) window.speechSynthesis.cancel(); }; }, []);
+  const audio = useRef<HTMLAudioElement | null>(null);
+  const canSynth = () => typeof window !== 'undefined' && 'speechSynthesis' in window;
+  const stop = () => { audio.current?.pause(); audio.current = null; if (canSynth()) window.speechSynthesis.cancel(); setSpeaking(false); };
+  useEffect(() => { setCanSpeak(canSynth() || !!narration); return () => { audio.current?.pause(); audio.current = null; if (canSynth()) window.speechSynthesis.cancel(); }; }, [narration]);
+  const readScreen = () => { const root = target(); if (!root || !canSynth()) { setSpeaking(false); return; } speakText(readableText(root), () => setSpeaking(false)); };
   const speak = () => {
-    const synth = window.speechSynthesis;
-    if (speaking) { synth.cancel(); setSpeaking(false); return; }
-    const root = target(); if (!root) return;
-    const utter = new SpeechSynthesisUtterance(readableText(root));
-    utter.lang = 'pt-BR'; utter.rate = 0.95;
-    const voice = synth.getVoices().find((v) => v.lang.toLowerCase().startsWith('pt-br')) ?? synth.getVoices().find((v) => v.lang.toLowerCase().startsWith('pt'));
-    if (voice) utter.voice = voice;
-    utter.onend = () => setSpeaking(false); utter.onerror = () => setSpeaking(false);
-    synth.cancel(); synth.speak(utter); setSpeaking(true);
+    if (speaking) { stop(); return; }
+    setSpeaking(true);
+    if (!narration) { readScreen(); return; }
+    const player = new Audio(`/vozes/${narration}.mp3`); audio.current = player;
+    player.onended = () => { if (audio.current !== player) return; audio.current = null; const more = extra?.().trim(); if (more && canSynth()) speakText(more, () => setSpeaking(false)); else setSpeaking(false); };
+    player.onerror = () => { if (audio.current !== player) return; audio.current = null; readScreen(); };
+    player.play().catch(() => { if (audio.current === player) { audio.current = null; readScreen(); } });
   };
   return <div className="a11y-bar">
     {canSpeak && <button type="button" onClick={speak} aria-pressed={speaking}>{speaking ? <Square aria-hidden="true" /> : <Volume2 aria-hidden="true" />}{speaking ? 'Parar leitura' : 'Ouvir esta tela'}</button>}
