@@ -53,3 +53,7 @@ Decidido com a Priscila em 26/11/2026: a página cobre os municípios do bioma A
 - **Arquivo da página** (`dados_pagina.json`, 151 KB): `m = [nome, cod_ibge, [floresta_pct de 1985 a 2025]]`, com o Pará primeiro. O estado sai dos dois primeiros dígitos do código IBGE. Há nomes repetidos em estados diferentes (Rio Branco, Presidente Médici, Pau D'Arco, Araguanã), por isso a busca mostra a sigla do estado.
 - **Conferência:** os 144 municípios do Pará saem idênticos aos da tabela anterior. No conjunto dos 540 municípios, o indicador `floresta` vai de 89,9% em 1985 para 76,7% em 2025. A mediana de perda por município é de 27,4 pontos percentuais. Maiores perdas: Eldorado do Carajás/PA (85,3), Buritis/RO (83,2), Tucumã/PA (80,9), São Domingos do Araguaia/PA (76,0), Urupá/RO (70,4).
 - Arquivos: a tabela longa `floresta_municipios_amazonia.csv` (pasta do projeto) (formato longo, município × ano) e `dados/dados_pagina_amazonia.json`.
+
+## Painel público "O que a Amazônia lembra" (/painel)
+
+A página mostra, em tempo real, a média dos chutes e a média da floresta medida pelo MapBiomas para cada geração (década de nascimento) e cada estado. As médias são calculadas no banco pela função `painel_publico()` (`pesquisa/painel/painel_publico.sql`), que só devolve grupos com pelo menos 5 respostas (anonimato k ≥ 5). A página nunca lê respostas individuais. A diferença é `chute_infancia_pct − real_infancia_pct`: positiva quando a pessoa lembra mais floresta do que havia.
