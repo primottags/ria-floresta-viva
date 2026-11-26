@@ -31,3 +31,24 @@ export async function insertResearch(table: 'respostas' | 'compartilhamentos', p
   });
   if (!res.ok) throw new Error('Não foi possível guardar sua resposta.');
 }
+
+export interface PanelGroup { n: number; chute: number; real: number; diferenca: number }
+export interface PanelData { minimo: number; total: number; atualizado: string; geracoes: (PanelGroup & { rotulo: string })[]; estados: (PanelGroup & { uf: string })[] }
+/** Médias públicas da pesquisa (só grupos com pelo menos `minimo` respostas, calculadas no banco). */
+export async function fetchPanel(fetcher: typeof fetch = fetch): Promise<PanelData> {
+  const res = await fetcher(`${ENDPOINT}/rpc/painel_publico`, {
+    method: 'POST', credentials: 'omit',
+    headers: { apikey: 'sb_publishable_mYiltuNt9dPS6vVWoWCQtQ_jdmqLb0E', 'Content-Type': 'application/json' },
+    body: '{}',
+  });
+  if (!res.ok) throw new Error('Painel indisponível.');
+  return res.json();
+}
+/** Frase do achado principal: a geração que mais se afasta do satélite. */
+export function panelHeadline(data: PanelData) {
+  const top = [...data.geracoes].sort((a, b) => Math.abs(b.diferenca) - Math.abs(a.diferenca))[0];
+  if (!top) return null;
+  const pts = Math.abs(Math.round(top.diferenca));
+  if (pts === 0) return `Quem nasceu em ${top.rotulo} lembra a floresta quase exatamente como o satélite registrou.`;
+  return `Quem nasceu em ${top.rotulo} lembra, em média, ${pts} ${pts === 1 ? 'ponto' : 'pontos'} ${top.diferenca > 0 ? 'a mais' : 'a menos'} de floresta do que o satélite registrou.`;
+}
