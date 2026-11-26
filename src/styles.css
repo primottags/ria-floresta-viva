@@ -404,3 +404,9 @@ details.number-alt label { display:flex; justify-content:center; align-items:cen
 .panel-real:has(.real-map) { padding-bottom:40px; }
 @media (max-width: 640px) { .panel-real:has(.real-map) { padding-bottom:52px; } }
 @media (max-width: 640px) { .compare-panels { gap:8px; margin-left:-12px; margin-right:-12px; } .compare-panel { padding:10px 8px 6px; } .compare-panel figcaption { grid-template-columns:1fr; } .compare-panel figcaption strong { font-size:26px; grid-row:auto; } .compare-panel figcaption span { font-size:13px; } }
+
+/* Depoimento opcional na revelação */
+.testimony { display: grid; gap: .6rem; margin: 1.5rem 0; padding: 1.25rem; border: 2px solid var(--border); border-radius: var(--radius); background: var(--card); }
+.testimony h2 { font-family: var(--font-display); font-size: 1.35rem; }
+.testimony button { justify-self: start; }
+.testimony-done { margin: 1.5rem 0; }

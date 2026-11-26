@@ -22,7 +22,7 @@ export function forestAt(municipality: Municipality, year: number) {
   return value;
 }
 const ENDPOINT = 'https://pdxjejfqzfgnhjsnhivs.supabase.co/rest/v1';
-export async function insertResearch(table: 'respostas' | 'compartilhamentos', payload: object) {
+export async function insertResearch(table: 'respostas' | 'compartilhamentos' | 'depoimentos' | 'uso', payload: object) {
   if (isPrototype(window.location.hostname)) throw new Error('Gravação desativada no protótipo.');
   const res = await fetch(`${ENDPOINT}/${table}`, {
     method: 'POST', credentials: 'omit',
@@ -31,3 +31,10 @@ export async function insertResearch(table: 'respostas' | 'compartilhamentos', p
   });
   if (!res.ok) throw new Error('Não foi possível guardar sua resposta.');
 }
+
+/** Conta uma etapa de uso, sem identificar a pessoa. Falhas são ignoradas. */
+export function countUse(etapa: 'inicio' | 'revelacao' | 'painel', modo?: 'participou' | 'explorou') {
+  const origem = new URLSearchParams(window.location.search).get('utm_source')?.slice(0, 40) || 'direto';
+  return insertResearch('uso', { etapa, modo: modo ?? null, origem }).catch(() => undefined);
+}
+export const birthDecade = (birth: number) => Math.min(2010, Math.floor(birth / 10) * 10);
