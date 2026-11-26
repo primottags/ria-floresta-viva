@@ -319,3 +319,22 @@ h1, h2, h3 { font-family: var(--font-display); line-height: 1.15; font-weight: 6
 .message-box { width:100%; padding:14px; font:17px var(--font-sans); border:2px solid var(--border); border-radius:var(--radius); background:var(--card); color:var(--foreground); resize:vertical; }
 
 .future-echo { font-size:18px; padding:18px; border-left:4px solid var(--forest); background:var(--card); }
+
+/* Tela do chute como foto antiga, com as lembranças marcadas dentro da cena */
+.memory-photo { margin:24px 0 0; padding:12px 12px 0; background:oklch(.97 .018 85); box-shadow:0 10px 28px -12px oklch(.3 .04 60 / .45), 0 0 0 1px oklch(.85 .03 80); transform:rotate(-.8deg); border-radius:3px; }
+.memory-photo .guess-scene { margin-top:0; height:300px; border-radius:1px; }
+.memory-photo .guess-scene::after { content:''; position:absolute; inset:0; pointer-events:none; background:radial-gradient(ellipse at center, transparent 55%, oklch(.35 .05 60 / .35) 100%); mix-blend-mode:multiply; }
+.memory-photo .landscape { filter:sepia(.32) saturate(.9) contrast(.96); transition:filter .6s ease; }
+.memory-photo.photo-faded .landscape { filter:sepia(.75) saturate(.6) blur(.5px) brightness(1.06); }
+.memory-photo figcaption { font-family:var(--font-display); font-style:italic; font-size:19px; color:oklch(.35 .04 60); padding:12px 6px 14px; display:flex; flex-wrap:wrap; justify-content:space-between; gap:4px 12px; align-items:baseline; }
+.memory-photo figcaption small { font-style:normal; font-family:inherit; font-size:13px; opacity:.75; }
+.scene-road { fill:oklch(.62 .06 60); } .scene-asphalt { fill:oklch(.45 .01 250); } .scene-dirt { fill:oklch(.68 .08 60); }
+.scene-buildings rect { fill:oklch(.62 .02 250); } .scene-window { stroke:oklch(.9 .06 90); stroke-width:6; }
+.scene-smoke path { fill:none; stroke:oklch(.7 .01 250 / .7); stroke-width:22; stroke-linecap:round; }
+.house-roof { fill:oklch(.55 .12 35); } .house-wall { fill:oklch(.88 .05 80); } .house-door { fill:oklch(.45 .07 50); } .house-window { fill:oklch(.75 .06 220); }
+.yard-crown { fill:oklch(.55 .12 140); } .yard-fruit { fill:oklch(.7 .17 50); }
+.scene-cow ellipse, .scene-cow circle { fill:oklch(.93 .01 80); stroke:oklch(.35 .02 60); stroke-width:3; } .scene-cow path { stroke:oklch(.35 .02 60); stroke-width:5; }
+.scene-truck rect { fill:oklch(.5 .1 30); } .scene-truck .truck-cab { fill:oklch(.6 .12 250); } .truck-wheel { fill:oklch(.25 .01 250); } .truck-logs { stroke:oklch(.45 .07 55); stroke-width:8; stroke-linecap:round; }
+.scene-fireflies circle { fill:oklch(.92 .16 100); filter:drop-shadow(0 0 6px oklch(.92 .16 100)); }
+@media (max-width: 640px) { .memory-photo { margin-left:-10px; margin-right:-10px; } .memory-photo .guess-scene { height:250px; margin-left:0; margin-right:0; border-radius:1px; } .memory-photo figcaption { font-size:16px; } }
+@media (prefers-reduced-motion: reduce) { .memory-photo .landscape { transition:none; } }
