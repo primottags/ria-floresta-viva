@@ -7,7 +7,7 @@ describe('regras da pesquisa', () => {
   it('usa nascimento mais dez a partir de 1975', () => { expect(referenceYear(1990)).toBe(2000); expect(referenceYear(2015)).toBe(2025); });
   it('permite gravar só a partir de 18 anos', () => { expect(isAdult(2008, 2026)).toBe(true); expect(isAdult(2009, 2026)).toBe(false); expect(canRecord(true, 2009, 2026, false, false)).toBe(false); });
   it('exige consentimento', () => { expect(canRecord(false, 1990, 2026, false, false)).toBe(false); expect(canRecord(true, 1990, 2026, false, false)).toBe(true); });
-  it('não grava no modo explorar ou fora do Pará', () => { expect(canRecord(true, 1990, 2026, true, false)).toBe(false); });
+  it('não grava no modo explorar ou fora da Amazônia', () => { expect(canRecord(true, 1990, 2026, true, false)).toBe(false); });
   it('não grava respostas repetidas no aparelho', () => { expect(canRecord(true, 1990, 2026, false, true)).toBe(false); });
   it('desliga gravação em qualquer preview e localhost', () => { expect(isPrototype('id-preview--123.lovable.app')).toBe(true); expect(isPrototype('preview.meusite.com')).toBe(true); expect(isPrototype('localhost')).toBe(true); expect(isPrototype('floresta.lovable.app')).toBe(false); });
   it('gera XXXX-XXXX sem I, O, 0 ou 1', () => { for (let i=0; i<100; i++) expect(responseCode()).toMatch(/^[A-HJ-NP-Z2-9]{4}-[A-HJ-NP-Z2-9]{4}$/); });

@@ -1,7 +1,10 @@
 export type Municipality = [string, number, number[]];
 export interface ForestData { ano0: number; anoN: number; colecao: string; m: Municipality[] }
 export type Residence = 'sim' | 'visita' | 'saiu';
-export const CONSENT = 'Esta página faz parte de uma pesquisa sobre como cada geração lembra a floresta do Pará. Se você concordar, guardamos seu município, seu ano de nascimento e seus chutes. Não pedimos nome, e-mail ou telefone, e não gravamos seu IP junto da resposta. As respostas só aparecem somadas, em gráficos e tabelas. Participar é voluntário e só vale para maiores de 18 anos.';
+export const CONSENT = 'Esta página faz parte de uma pesquisa sobre como cada geração lembra a floresta da Amazônia. Se você concordar, guardamos seu município, seu ano de nascimento e seus chutes. Não pedimos nome, e-mail ou telefone, e não gravamos seu IP junto da resposta. As respostas só aparecem somadas, em gráficos e tabelas. Participar é voluntário e só vale para maiores de 18 anos.';
+const UF: Record<string, string> = { '11': 'RO', '12': 'AC', '13': 'AM', '14': 'RR', '15': 'PA', '16': 'AP', '17': 'TO', '21': 'MA', '51': 'MT' };
+/** Sigla do estado a partir dos dois primeiros dígitos do código IBGE. */
+export const ufOf = (cod: number) => UF[String(cod).slice(0, 2)] ?? '';
 export const normalize = (text: string) => text.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLocaleLowerCase('pt-BR');
 export const referenceYear = (birth: number) => Math.max(1985, birth + 10);
 export const isAdult = (birth: number, currentYear: number) => currentYear - birth >= 18;
