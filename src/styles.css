@@ -321,7 +321,7 @@ h1, h2, h3 { font-family: var(--font-display); line-height: 1.15; font-weight: 6
 .future-echo { font-size:18px; padding:18px; border-left:4px solid var(--forest); background:var(--card); }
 
 /* Tela do chute como foto antiga, com as lembranças marcadas dentro da cena */
-.memory-photo { margin:24px 0 0; padding:12px 12px 0; background:oklch(.97 .018 85); box-shadow:0 10px 28px -12px oklch(.3 .04 60 / .45), 0 0 0 1px oklch(.85 .03 80); transform:rotate(-.8deg); border-radius:3px; }
+.memory-photo { margin:24px 0 0; padding:12px 12px 0; background:oklch(.97 .018 85); box-shadow:0 10px 28px -12px oklch(.3 .04 60 / .45), 0 0 0 1px oklch(.85 .03 80); border-radius:3px; }
 .memory-photo .guess-scene { margin-top:0; height:300px; border-radius:1px; }
 .memory-photo .guess-scene::after { content:''; position:absolute; inset:0; pointer-events:none; background:radial-gradient(ellipse at center, transparent 55%, oklch(.35 .05 60 / .35) 100%); mix-blend-mode:multiply; }
 .memory-photo .landscape { filter:sepia(.32) saturate(.9) contrast(.96); transition:filter .6s ease; }
@@ -331,10 +331,38 @@ h1, h2, h3 { font-family: var(--font-display); line-height: 1.15; font-weight: 6
 .scene-road { fill:oklch(.62 .06 60); } .scene-asphalt { fill:oklch(.45 .01 250); } .scene-dirt { fill:oklch(.68 .08 60); }
 .scene-buildings rect { fill:oklch(.62 .02 250); } .scene-window { stroke:oklch(.9 .06 90); stroke-width:6; }
 .scene-smoke path { fill:none; stroke:oklch(.7 .01 250 / .7); stroke-width:22; stroke-linecap:round; }
-.house-roof { fill:oklch(.55 .12 35); } .house-wall { fill:oklch(.88 .05 80); } .house-door { fill:oklch(.45 .07 50); } .house-window { fill:oklch(.75 .06 220); }
-.yard-crown { fill:oklch(.55 .12 140); } .yard-fruit { fill:oklch(.7 .17 50); }
-.scene-cow ellipse, .scene-cow circle { fill:oklch(.93 .01 80); stroke:oklch(.35 .02 60); stroke-width:3; } .scene-cow path { stroke:oklch(.35 .02 60); stroke-width:5; }
-.scene-truck rect { fill:oklch(.5 .1 30); } .scene-truck .truck-cab { fill:oklch(.6 .12 250); } .truck-wheel { fill:oklch(.25 .01 250); } .truck-logs { stroke:oklch(.45 .07 55); stroke-width:8; stroke-linecap:round; }
+/* Elementos das lembranças: mesmo estilo chapado das árvores, sem contorno */
+.house-stilt, .house-steps { fill:oklch(.42 .06 55); stroke:oklch(.42 .06 55); stroke-width:4; stroke-linecap:round; }
+.house-wall { fill:oklch(.74 .08 65); } .house-plank { stroke:oklch(.64 .08 60); stroke-width:2; } .house-floor { fill:oklch(.5 .07 55); }
+.house-roof { fill:oklch(.46 .1 38); } .house-roof-face { fill:oklch(.56 .12 40); } .house-door { fill:oklch(.38 .06 50); } .house-window { fill:oklch(.32 .04 230); }
+.palm-trunk { fill:none; stroke:oklch(.5 .05 70); stroke-width:5; stroke-linecap:round; } .palm-frond { fill:none; stroke:oklch(.48 .11 145); stroke-width:6; stroke-linecap:round; } .palm-berries { fill:oklch(.32 .09 330); }
+.yard-crown { fill:oklch(.5 .11 140); } .yard-fruit { fill:oklch(.74 .16 65); }
+.cow-body, .cow-head { fill:oklch(.94 .008 85); } .cow-shade { fill:oklch(.84 .012 80); } .cow-leg { fill:oklch(.82 .01 80); } .cow-ear { fill:oklch(.86 .02 60); } .cow-dewlap { fill:oklch(.9 .01 80); } .cow-muzzle { fill:oklch(.55 .03 40); } .cow-tuft { fill:oklch(.45 .03 60); }
+.cow-tail, .cow-horn { fill:none; stroke:oklch(.45 .03 60); stroke-width:3; stroke-linecap:round; } .cow-eye { fill:oklch(.25 .02 60); }
+.truck-cab { fill:oklch(.55 .13 245); } .truck-glass { fill:oklch(.85 .04 220); } .truck-bed, .truck-chassis { fill:oklch(.32 .02 250); }
+.truck-log { fill:oklch(.5 .08 50); } .truck-log-end { fill:oklch(.78 .08 75); stroke:oklch(.55 .08 55); stroke-width:2; } .truck-wheel { fill:oklch(.22 .01 250); } .truck-hub { fill:oklch(.7 .01 250); }
 .scene-fireflies circle { fill:oklch(.92 .16 100); filter:drop-shadow(0 0 6px oklch(.92 .16 100)); }
 @media (max-width: 640px) { .memory-photo { margin-left:-10px; margin-right:-10px; } .memory-photo .guess-scene { height:250px; margin-left:0; margin-right:0; border-radius:1px; } .memory-photo figcaption { font-size:16px; } }
 @media (prefers-reduced-motion: reduce) { .memory-photo .landscape { transition:none; } }
+
+/* Gesto único do chute: a barra fica dentro da foto, com uma muda como pegador */
+.memory-photo .planting-control { max-width:none; padding:18px 18px 0; }
+.planting-track { height:56px; cursor:pointer; }
+.planting-track::before { height:12px; background:oklch(.86 .03 80); }
+.track-fill { height:12px; background:var(--forest); }
+.track-thumb { width:46px; height:46px; display:grid; place-items:center; color:var(--card); background:var(--forest); border:3px solid var(--card); box-shadow:0 4px 12px -4px oklch(.3 .05 150 / .6); transition:left .05s linear; }
+.track-thumb svg { width:24px; height:24px; }
+.track-thumb-idle { animation:thumb-nudge 1.8s ease-in-out infinite; }
+@keyframes thumb-nudge { 0%,100% { transform:translateX(-50%); } 30% { transform:translateX(calc(-50% - 14px)); } 60% { transform:translateX(calc(-50% + 14px)); } }
+.planting-track:focus-visible { outline:3px solid var(--ring); outline-offset:4px; border-radius:8px; }
+.track-labels { font-size:14px; margin:2px 12px 0; }
+.guess-empty { opacity:.55; }
+.guess-actions { max-width:520px; margin:22px auto 0; text-align:center; }
+.guess-actions > button { width:100%; margin-bottom:8px; }
+.guess-caption { font-family:var(--font-display); font-size:20px; margin-bottom:12px; }
+details.number-alt { display:block; margin:0 0 18px; font-size:14px; color:var(--muted-foreground); }
+details.number-alt summary { cursor:pointer; text-decoration:underline; text-underline-offset:3px; }
+details.number-alt label { display:flex; justify-content:center; align-items:center; gap:10px; margin-top:10px; }
+.memory-photo .guess-scene { cursor:default; }
+@media (max-width: 640px) { .guess-caption { font-size:17px; } .memory-photo .planting-control { padding:14px 8px 0; } }
+@media (prefers-reduced-motion: reduce) { .track-thumb-idle { animation:none; } }
