@@ -2,6 +2,7 @@
 Texturas do chute para cada bioma: um recorte Landsat de paisagem nativa e um de paisagem
 convertida (pasto, lavoura). Não representam nenhum município, só dão "cara" de satélite ao terreno.
 
+Grava <bioma>-nativa.jpg e <bioma>-convertida.jpg (os ESCOLHIDOS) e, para conferência, cand-*.jpg.
 Para cada candidato, imprime a fração nativa do recorte pelo MapBiomas (Coleção 11, 2025),
 para conferir que o nativo é quase todo nativo e o convertido quase todo convertido.
 
@@ -30,6 +31,15 @@ CANDIDATOS = {
                         ("camaqua", -51.90, -30.90, "convertida"), ("sao-gabriel", -54.30, -30.40, "convertida")]),
     "pantanal": ((7, 10), [("pocone", -56.65, -17.20, "nativa"), ("nhecolandia", -56.30, -19.00, "nativa"),
                            ("miranda", -56.20, -20.10, "convertida"), ("sao-gabriel-oeste", -54.55, -19.35, "convertida")]),
+}
+
+# Recortes escolhidos depois de ver os candidatos (fração nativa pelo MapBiomas 2025 entre parênteses).
+ESCOLHIDOS = {
+    "mata-atlantica": ("intervales", "ribeirao-preto"),   # 97% / 9%
+    "cerrado": ("jalapao", "rio-verde"),                  # 99% / 13%
+    "caatinga": ("capivara", "feira-santana"),            # 100% / 15%
+    "pampa": ("ibirapuita", "camaqua"),                   # 99% / 32%
+    "pantanal": ("nhecolandia", "sao-gabriel-oeste"),     # 94% / 7%
 }
 
 
@@ -65,6 +75,8 @@ def rodar(saida, projeto=None):
             arq = saida / f"cand-{bioma}-{tipo}-{nome}.jpg"
             img.resize((LADO, LADO)).save(arq, "JPEG", quality=82, optimize=True)
             print(f"{arq.name}: {round(100 * list(frac.values())[0])}% nativo", flush=True)
+            if nome in ESCOLHIDOS[bioma]:
+                img.resize((LADO, LADO)).save(saida / f"{bioma}-{tipo}.jpg", "JPEG", quality=82, optimize=True)
 
 
 if __name__ == "__main__":
