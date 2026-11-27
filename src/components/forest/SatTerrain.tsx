@@ -2,16 +2,21 @@ import { useEffect, useRef, useState } from 'react';
 
 /**
  * Terreno "com cara de foto de satélite" para o chute. Mistura duas texturas recortadas de
- * imagens Landsat reais da Amazônia (mata fechada e pasto) conforme o percentual escolhido.
- * A mata some a partir das estradas, no desenho de espinha de peixe típico da região:
- * o que fica longe das estradas é o último pedaço a virar pasto.
+ * imagens Landsat reais do bioma (paisagem nativa e convertida) conforme o percentual escolhido.
+ * Na Amazônia a mata some a partir das estradas, em espinha de peixe; no Cerrado, na Mata Atlântica
+ * e no Pampa, lote por lote; na Caatinga e no Pantanal, em manchas.
  * Não representa nenhum município: é só uma paisagem de referência.
  */
 const S = 300;
 
-let field: Float32Array | null = null;
-let sorted: Float32Array | null = null;
-let roadDist: Float32Array | null = null;
+type Pattern = 'espinha' | 'talhoes' | 'manchas';
+type Built = { field: Float32Array; sorted: Float32Array; roadDist: Float32Array };
+const built: Partial<Record<Pattern, Built>> = {};
+
+/** Como a paisagem nativa vira outro uso em cada bioma. */
+const PATTERN: Record<string, Pattern> = { amazonia: 'espinha', 'mata-atlantica': 'talhoes', cerrado: 'talhoes', pampa: 'talhoes', caatinga: 'manchas', pantanal: 'manchas' };
+/** Texturas Landsat (nativo, convertido). A Amazônia usa os recortes originais de Eldorado do Carajás. */
+const texturePaths = (biome: string): [string, string] => biome === 'amazonia' ? ['/texturas/floresta.jpg', '/texturas/pasto.jpg'] : [`/texturas/${biome}-nativa.jpg`, `/texturas/${biome}-convertida.jpg`];
 
 function random(seed: number) {
   let s = seed >>> 0;
@@ -37,25 +42,40 @@ function distToSegment(px: number, py: number, ax: number, ay: number, bx: numbe
   return Math.hypot(px - ax - t * dx, py - ay - t * dy);
 }
 
-/** Calcula uma vez a distância até as estradas e o "quanto resiste" de cada pixel. */
-function build() {
-  if (field) return;
+/** Calcula uma vez a distância até as estradas e o "quanto resiste" de cada pixel.
+ * espinha: a mata some a partir das estradas (Amazônia). talhoes: lotes inteiros viram lavoura ou pasto, um a um.
+ * manchas: o nativo some em manchas irregulares, sem estrada. */
+function build(pattern: Pattern): Built {
+  const done = built[pattern]; if (done) return done;
   const roads: [number, number, number, number][] = [];
-  const ax = 0; const ay = S * 0.79; const bx = S; const by = S * 0.25; // estrada principal
-  roads.push([ax, ay, bx, by]);
-  const len = Math.hypot(bx - ax, by - ay); const nx = -(by - ay) / len; const ny = (bx - ax) / len;
-  for (let k = 1; k < 8; k++) { // vicinais perpendiculares
-    const cx = ax + ((bx - ax) * k) / 8; const cy = ay + ((by - ay) * k) / 8;
-    roads.push([cx - nx * S, cy - ny * S, cx + nx * S, cy + ny * S]);
-  }
   const n1 = noise(9, 7); const n2 = noise(23, 11);
-  field = new Float32Array(S * S); roadDist = new Float32Array(S * S);
+  if (pattern === 'espinha') {
+    const ax = 0; const ay = S * 0.79; const bx = S; const by = S * 0.25; // estrada principal
+    roads.push([ax, ay, bx, by]);
+    const len = Math.hypot(bx - ax, by - ay); const nx = -(by - ay) / len; const ny = (bx - ax) / len;
+    for (let k = 1; k < 8; k++) { // vicinais perpendiculares
+      const cx = ax + ((bx - ax) * k) / 8; const cy = ay + ((by - ay) * k) / 8;
+      roads.push([cx - nx * S, cy - ny * S, cx + nx * S, cy + ny * S]);
+    }
+  } else if (pattern === 'talhoes') {
+    for (let k = 1; k < 4; k++) roads.push([(S * k) / 4 + 6, 0, (S * k) / 4 - 6, S]);
+    roads.push([0, S * 0.36, S, S * 0.42], [0, S * 0.72, S, S * 0.68]);
+  }
+  const plot = random(5); const plots = Array.from({ length: 4 * 3 * 2 }, plot);
+  const field = new Float32Array(S * S); const roadDist = new Float32Array(S * S);
   for (let y = 0; y < S; y++) for (let x = 0; x < S; x++) {
     let d = Infinity; for (const r of roads) d = Math.min(d, distToSegment(x, y, ...r));
     const k = y * S + x; roadDist[k] = d;
-    field[k] = d + (n1(x, y) * 0.75 + n2(x, y) * 0.25) * 60;
+    const n = n1(x, y) * 0.75 + n2(x, y) * 0.25;
+    if (pattern === 'espinha') field[k] = d + n * 60;
+    else if (pattern === 'talhoes') {
+      // Cada lote (entre as estradas, metade de cima ou de baixo) tem a sua vez de ser aberto.
+      const col = Math.min(3, Math.floor(x / (S / 4))); const row = y < S * 0.39 ? 0 : y < S * 0.7 ? 1 : 2; const half = (x % (S / 4)) < S / 8 ? 0 : 1;
+      field[k] = (plots[(row * 4 + col) * 2 + half] ?? 0) * 200 + n * 8;
+    } else field[k] = n * 200;
   }
-  sorted = Float32Array.from(field).sort();
+  const out = { field, sorted: Float32Array.from(field).sort(), roadDist };
+  built[pattern] = out; return out;
 }
 
 function loadPixels(src: string) {
@@ -67,20 +87,22 @@ function loadPixels(src: string) {
   });
 }
 
-let textures: Promise<[Uint8ClampedArray, Uint8ClampedArray]> | null = null;
+const textures: Record<string, Promise<[Uint8ClampedArray, Uint8ClampedArray]> | undefined> = {};
 
-export function SatTerrain({ cover, empty = false, flat = false }: { cover: number; empty?: boolean; flat?: boolean }) {
+export function SatTerrain({ cover, empty = false, flat = false, biome = 'amazonia' }: { cover: number; empty?: boolean; flat?: boolean; biome?: string }) {
   const ref = useRef<HTMLCanvasElement>(null);
   const [tex, setTex] = useState<[Uint8ClampedArray, Uint8ClampedArray] | null>(null);
   useEffect(() => {
     let alive = true;
-    textures ??= Promise.all([loadPixels('/texturas/floresta.jpg'), loadPixels('/texturas/pasto.jpg')]);
-    textures.then((t) => { if (alive) setTex(t); }).catch(() => { textures = null; });
+    const [a, b] = texturePaths(biome);
+    // Sem as texturas do bioma, usa as da Amazônia.
+    const load = textures[biome] ??= Promise.all([loadPixels(a), loadPixels(b)]).catch(() => Promise.all([loadPixels('/texturas/floresta.jpg'), loadPixels('/texturas/pasto.jpg')]));
+    load.then((t) => { if (alive) setTex(t); }).catch(() => { textures[biome] = undefined; });
     return () => { alive = false; };
-  }, []);
+  }, [biome]);
   useEffect(() => {
     const ctx = ref.current?.getContext('2d'); if (!ctx || !tex) return;
-    build(); if (!field || !sorted || !roadDist) return;
+    const { field, sorted, roadDist } = build(PATTERN[biome] ?? 'espinha');
     const [forest, pasture] = tex; const share = Math.max(0, Math.min(100, empty ? 50 : cover)) / 100;
     const idx = Math.floor((1 - share) * (S * S));
     const threshold = share >= 1 ? -Infinity : share <= 0 ? Infinity : (sorted[Math.min(S * S - 1, idx)] ?? 0);
@@ -96,6 +118,6 @@ export function SatTerrain({ cover, empty = false, flat = false }: { cover: numb
       o[p] = r; o[p + 1] = g; o[p + 2] = b; o[p + 3] = 255;
     }
     ctx.putImageData(out, 0, 0);
-  }, [tex, cover, empty]);
+  }, [tex, cover, empty, biome]);
   return <div className={`sat-terrain${flat ? ' is-flat' : ''}${empty ? ' is-empty' : ''}`} aria-hidden="true"><canvas ref={ref} width={S} height={S} /></div>;
 }

@@ -9,11 +9,11 @@ function wrap(ctx: Ctx, text: string, width: number) {
 }
 
 /** Carrega o mapa do MapBiomas do município (tira vertical com um quadro por ano, 1985–2025). */
-async function loadMap(cod: number) {
+async function loadMap(cod: number, folder = 'mapas') {
   try {
-    const index = await fetch('/mapas/indice.json').then(r => r.ok ? r.json() as Promise<Record<string, [number, number]>> : null);
+    const index = await fetch(`/${folder}/indice.json`).then(r => r.ok ? r.json() as Promise<Record<string, [number, number]>> : null);
     const size = index?.[String(cod)]; if (!size) return null;
-    const img = new Image(); img.src = `/mapas/${cod}.png`; await img.decode();
+    const img = new Image(); img.src = `/${folder}/${cod}.png`; await img.decode();
     return { img, w: size[0], h: size[1] };
   } catch { return null; }
 }
@@ -26,7 +26,7 @@ async function loadMap(cod: number) {
 export type CardTheme = { title: string; noun: string; legend: string; ask: string };
 const AMAZONIA: CardTheme = { title: 'A floresta da sua infância', noun: 'floresta', legend: 'floresta', ask: 'E você, quanta floresta lembra?' };
 
-export async function createShareCard(name: string, year: number, guess: number, past: number, today: number, message = '', cod?: number, theme: CardTheme = AMAZONIA) {
+export async function createShareCard(name: string, year: number, guess: number, past: number, today: number, message = '', cod?: number, theme: CardTheme = AMAZONIA, folder = 'mapas') {
   await document.fonts.ready;
   const canvas = document.createElement('canvas'); canvas.width = 1080; canvas.height = 1350;
   const ctx = canvas.getContext('2d'); if (!ctx) throw new Error('Não foi possível criar a imagem.');
@@ -52,7 +52,7 @@ export async function createShareCard(name: string, year: number, guess: number,
   ctx.font = '36px "Atkinson Hyperlegible"';
   ctx.fillText(`O satélite mostra ${Math.round(past)}% em ${year} e ${Math.round(today)}% hoje.`, 80, y);
 
-  const map = cod ? await loadMap(cod) : null;
+  const map = cod ? await loadMap(cod, folder) : null;
   y += 60;
   if (map) {
     // Dois quadros lado a lado: o ano da lembrança e 2025.
