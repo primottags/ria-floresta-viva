@@ -503,3 +503,16 @@ details.number-alt label { display:flex; justify-content:center; align-items:cen
 .panel-teaser:hover { border-color: var(--forest); }
 .panel-axis { display: flex; justify-content: space-between; margin: 0 .6rem .35rem; font-size: .78rem; color: var(--muted-foreground); }
 .panel-axis span:last-child { transform: translateX(.6rem); }
+
+/* Como funciona, na pergunta do ano (feedback do teste: o chute só ficava claro depois). */
+.how-steps { list-style: none; counter-reset: passo; padding: 0; margin: .25rem 0 1.25rem; display: grid; gap: .5rem; }
+.how-steps li { counter-increment: passo; position: relative; padding: .55rem .75rem .55rem 2.6rem; border-radius: .75rem; background: color-mix(in srgb, var(--forest, #2f6b3a) 9%, transparent); line-height: 1.35; }
+.how-steps li::before { content: counter(passo); position: absolute; left: .7rem; top: 50%; transform: translateY(-50%); width: 1.4rem; height: 1.4rem; border-radius: 50%; display: grid; place-items: center; font-weight: 700; font-size: .85rem; background: var(--forest); color: var(--background); }
+
+/* Revelação: pausa no ano da infância e troca entre "infância" e "hoje". */
+.compare-hold { margin: 12px 0 0; padding: 10px 14px; border-radius: 10px; background: color-mix(in srgb, var(--memory) 45%, transparent); color: var(--foreground); font-size: 17px; text-align: center; }
+.compare-switch { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.compare-switch button { border: 1.5px solid var(--forest); background: transparent; color: var(--foreground); border-radius: 999px; padding: 7px 14px; font: inherit; font-size: 14px; cursor: pointer; min-height: 40px; }
+.compare-switch button[aria-pressed="true"] { background: var(--forest); color: var(--background); }
+.compare-switch .compare-replay { border-style: dashed; margin-left: auto; }
+@media (max-width: 640px) { .compare-switch .compare-replay { margin-left: 0; } }

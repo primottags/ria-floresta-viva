@@ -60,9 +60,9 @@ function Rounds({ place, reset }: { place: Municipality; reset: () => void }) {
       const real = Math.round(forestAt(place, g.year)); const guess = guesses[g.key] ?? 50; const open = !!shown[g.key];
       return <li key={g.key} className="sala-round">
         <div className="sala-round-head"><span className="sala-who">{g.who}</span><span className="sala-year">{g.year}</span><span className="help">{g.detail}, aos 10 anos</span></div>
-        <label className="field-label" htmlFor={`chute-${g.key}`}>Chute da turma: <b>{guess}%</b> de floresta</label>
-        <input id={`chute-${g.key}`} type="range" min={0} max={100} value={guess} disabled={open} onChange={(e) => setGuesses({ ...guesses, [g.key]: Number(e.target.value) })} className="sala-range" />
-        {open ? <div className="sala-reveal"><RealMap cod={place[1]} year={g.year} fallback={real} /><p className="sala-real"><b>{real}%</b> de floresta no satélite · {guess === real ? 'a turma acertou!' : `a turma chutou ${Math.abs(guess - real)} ${Math.abs(guess - real) === 1 ? 'ponto' : 'pontos'} ${guess > real ? 'a mais' : 'a menos'}`}</p></div>
+        <label className="field-label" htmlFor={`chute-${g.key}`}>Chute da turma: <b>{guess / 10} de cada 10</b> pedaços eram floresta</label>
+        <input id={`chute-${g.key}`} type="range" min={0} max={100} step={10} value={guess} disabled={open} onChange={(e) => setGuesses({ ...guesses, [g.key]: Number(e.target.value) })} className="sala-range" />
+        {open ? <div className="sala-reveal"><RealMap cod={place[1]} year={g.year} fallback={real} /><p className="sala-real"><b>{Math.round(real / 10)} de 10</b> pedaços eram floresta no satélite ({real}%) · {guess / 10 === Math.round(real / 10) ? 'a turma acertou!' : `a turma chutou ${Math.abs(guess / 10 - Math.round(real / 10))} ${Math.abs(guess / 10 - Math.round(real / 10)) === 1 ? 'pedaço' : 'pedaços'} ${guess / 10 > Math.round(real / 10) ? 'a mais' : 'a menos'}`}</p></div>
           : <Button variant="forest" size="lg" onClick={() => setShown({ ...shown, [g.key]: true })}><Eye aria-hidden="true" /> Revelar {g.year}</Button>}
       </li>;
     })}</ol>
@@ -88,7 +88,7 @@ function Guide() {
       <li>Em que ano você nasceu e onde morava quando tinha 10 anos?</li>
       <li>Como era a mata perto da sua casa? Do que você brincava?</li>
       <li>Que bichos, árvores, rios ou igarapés você via e hoje não vê mais?</li>
-      <li>De cada 100 pedaços de terra do município, quantos você acha que eram floresta naquela época?</li>
+      <li>Se o município fosse dividido em 10 pedaços, quantos você acha que eram floresta naquela época?</li>
       <li>O que você gostaria que as crianças de hoje ainda pudessem ver?</li>
     </ol>
     <p className="help">Se a pessoa entrevistada tiver 18 anos ou mais e quiser, ela pode responder a pesquisa na página principal, no próprio celular.</p>
