@@ -82,10 +82,10 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
       { title: "A floresta da sua infância" },
-      { name: "description", content: "Uma viagem pela memória da floresta na Amazônia." },
+      { name: "description", content: "Uma viagem pela memória da paisagem natural do Brasil, bioma por bioma." },
       { name: "author", content: "Priscila Motta Gadelha Silva" },
       { property: "og:title", content: "A floresta da sua infância" },
-      { property: "og:description", content: "Uma viagem pela memória da floresta na Amazônia." },
+      { property: "og:description", content: "Uma viagem pela memória da paisagem natural do Brasil, bioma por bioma." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
 

@@ -9,7 +9,7 @@ describe('painel público', () => {
   });
   it('escolhe a geração mais distante do satélite', () => {
     const data = { ...base, geracoes: [{ rotulo: '1960–1969', n: 6, chute: 70, real: 80, diferenca: -10.2 }, { rotulo: '1990–1999', n: 6, chute: 60, real: 58, diferenca: 2 }] };
-    expect(panelHeadline(data)).toBe('Quem nasceu em 1960–1969 lembra, em média, 10 pontos a menos de floresta do que o satélite registrou.');
+    expect(panelHeadline(data)).toBe('Quem nasceu em 1960–1969 lembra, em média, 10 pontos a menos de paisagem nativa do que o satélite registrou.');
   });
   it('chama a função pública do banco sem credenciais', async () => {
     const fetcher = vi.fn().mockResolvedValue({ ok: true, json: async () => base });

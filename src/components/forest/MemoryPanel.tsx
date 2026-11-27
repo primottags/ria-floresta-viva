@@ -2,7 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Users } from 'lucide-react';
 import { fetchPanel, panelHeadline, type PanelData, type PanelGroup } from '@/lib/research';
 
-const UF_NAME: Record<string, string> = { AC: 'Acre', AM: 'Amazonas', AP: 'Amapá', MA: 'Maranhão', MT: 'Mato Grosso', PA: 'Pará', RO: 'Rondônia', RR: 'Roraima', TO: 'Tocantins' };
+const UF_NAME: Record<string, string> = { AC: 'Acre', AL: 'Alagoas', AM: 'Amazonas', AP: 'Amapá', BA: 'Bahia', CE: 'Ceará', DF: 'Distrito Federal', ES: 'Espírito Santo', GO: 'Goiás', MA: 'Maranhão', MG: 'Minas Gerais', MS: 'Mato Grosso do Sul', MT: 'Mato Grosso', PA: 'Pará', PB: 'Paraíba', PE: 'Pernambuco', PI: 'Piauí', PR: 'Paraná', RJ: 'Rio de Janeiro', RN: 'Rio Grande do Norte', RO: 'Rondônia', RR: 'Roraima', RS: 'Rio Grande do Sul', SC: 'Santa Catarina', SE: 'Sergipe', SP: 'São Paulo', TO: 'Tocantins' };
 
 /** Uma linha do painel: a lembrança média e o satélite na mesma régua de 0 a 100%. */
 function Row({ label, group }: { label: string; group: PanelGroup }) {
@@ -28,9 +28,9 @@ export function PanelView({ data }: { data: PanelData }) {
     {headline && <p className="panel-headline">{headline}</p>}
     {waiting && <p className="panel-waiting">Ainda estamos juntando lembranças. Cada grupo aparece aqui quando tiver pelo menos {data.minimo} respostas, para que ninguém possa ser identificado.</p>}
     {!waiting && <div className="panel-key"><span><i className="panel-dot-memory" />Lembrança média</span><span><i className="panel-dot-real" />Satélite (MapBiomas)</span></div>}
-    {data.geracoes.length > 0 && <section aria-labelledby="painel-geracoes"><h2 id="painel-geracoes" className="panel-title">Por geração <small>ano de nascimento · lembrança aos 10 anos</small></h2><div className="panel-axis" aria-hidden="true"><span>0%</span><span>50%</span><span>100% de floresta</span></div><ol className="panel-list">{data.geracoes.map((g) => <Row key={g.rotulo} label={g.rotulo} group={g} />)}</ol></section>}
-    {data.estados.length > 0 && <section aria-labelledby="painel-estados"><h2 id="painel-estados" className="panel-title">Por estado <small>onde fica o município lembrado</small></h2><div className="panel-axis" aria-hidden="true"><span>0%</span><span>50%</span><span>100% de floresta</span></div><ol className="panel-list">{data.estados.map((g) => <Row key={g.uf} label={UF_NAME[g.uf] ?? g.uf} group={g} />)}</ol></section>}
-    <p className="method-note">Médias das respostas anônimas, comparadas com a floresta medida pelo MapBiomas (Coleção 11) no mesmo município e ano. Grupos com menos de {data.minimo} respostas ficam de fora. Os dados são de quem quis participar, não de uma amostra sorteada.</p>
+    {data.geracoes.length > 0 && <section aria-labelledby="painel-geracoes"><h2 id="painel-geracoes" className="panel-title">Por geração <small>ano de nascimento · lembrança aos 10 anos</small></h2><div className="panel-axis" aria-hidden="true"><span>0%</span><span>50%</span><span>100% de paisagem nativa</span></div><ol className="panel-list">{data.geracoes.map((g) => <Row key={g.rotulo} label={g.rotulo} group={g} />)}</ol></section>}
+    {data.estados.length > 0 && <section aria-labelledby="painel-estados"><h2 id="painel-estados" className="panel-title">Por estado <small>onde fica o município lembrado</small></h2><div className="panel-axis" aria-hidden="true"><span>0%</span><span>50%</span><span>100% de paisagem nativa</span></div><ol className="panel-list">{data.estados.map((g) => <Row key={g.uf} label={UF_NAME[g.uf] ?? g.uf} group={g} />)}</ol></section>}
+    <p className="method-note">Médias das respostas anônimas, comparadas com o que o MapBiomas (Coleção 11) mediu no bioma escolhido (floresta na Amazônia e na Mata Atlântica, vegetação nativa nos outros biomas) no mesmo município e ano. Grupos com menos de {data.minimo} respostas ficam de fora. Os dados são de quem quis participar, não de uma amostra sorteada.</p>
   </div>;
 }
 

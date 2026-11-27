@@ -58,7 +58,7 @@ function speakText(text: string, done: () => void) {
  * lê em seguida com a voz do aparelho o que muda de pessoa para pessoa (`extra`).
  * Sem gravação (ou se o áudio falhar), lê a tela inteira com a voz do aparelho.
  */
-export function A11yBar({ target, narration, extra }: { target: () => HTMLElement | null; narration?: NarrationKey | undefined; extra?: (() => string) | undefined }) {
+export function A11yBar({ target, narration, extra }: { target: () => HTMLElement | null; narration?: NarrationKey | undefined; extra?: (() => string | string[]) | undefined }) {
   const [light, setLight] = useLightMode();
   const [speaking, setSpeaking] = useState(false);
   const [canSpeak, setCanSpeak] = useState(false);
@@ -72,7 +72,9 @@ export function A11yBar({ target, narration, extra }: { target: () => HTMLElemen
     setSpeaking(true);
     if (!narration) { readScreen(); return; }
     const player = new Audio(`/vozes/${narration}.mp3`); audio.current = player;
-    player.onended = () => { if (audio.current !== player) return; audio.current = null; const more = extra?.().trim(); if (more && canSynth()) speakText(more, () => setSpeaking(false)); else setSpeaking(false); };
+    // Depois da fala fixa: uma lista de trechos gravados (números da revelação) ou um texto para a voz do aparelho.
+    const playClips = (clips: string[]) => { const next = clips[0]; if (!next) { setSpeaking(false); return; } const p = new Audio(next); audio.current = p; const skip = () => { if (audio.current === p) playClips(clips.slice(1)); }; p.onended = skip; p.onerror = skip; p.play().catch(() => { if (audio.current === p) playClips(clips.slice(1)); }); };
+    player.onended = () => { if (audio.current !== player) return; audio.current = null; const more = extra?.(); if (Array.isArray(more)) { playClips(more); return; } const text = more?.trim(); if (text && canSynth()) speakText(text, () => setSpeaking(false)); else setSpeaking(false); };
     player.onerror = () => { if (audio.current !== player) return; audio.current = null; readScreen(); };
     player.play().catch(() => { if (audio.current === player) { audio.current = null; readScreen(); } });
   };
