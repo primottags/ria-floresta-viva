@@ -13,5 +13,5 @@ describe('regras da pesquisa', () => {
   it('gera XXXX-XXXX sem I, O, 0 ou 1', () => { for (let i=0; i<100; i++) expect(responseCode()).toMatch(/^[A-HJ-NP-Z2-9]{4}-[A-HJ-NP-Z2-9]{4}$/); });
   it('busca ignora acentos', () => { expect(normalize('São Félix do Xingu')).toBe('sao felix do xingu'); expect(normalize('Marabá')).toBe('maraba'); });
   it('preserva as casas decimais na coleta', () => { const m: Municipality = ['Teste', 1500000, [71.05]]; expect(forestAt(m, 1985)).toBe(71.05); });
-  it('mantém 540 municípios da Amazônia e 41 anos da coleção 11', () => { const data = JSON.parse(readFileSync('public/dados_pagina.json', 'utf8')) as ForestData; expect(data.ano0).toBe(1985); expect(data.anoN).toBe(2025); expect(data.colecao).toBe('11'); expect(data.m).toHaveLength(540); expect(data.m.every(m => m[2].length === 41)).toBe(true); expect(data.m.find(m => m[0] === 'Marabá')?.[2][15]).toBe(71.05); });
+  it('mantém 540 municípios da Amazônia e 41 anos da coleção 11', () => { const data = JSON.parse(readFileSync('public/dados/amazonia.json', 'utf8')) as ForestData; expect(data.ano0).toBe(1985); expect(data.anoN).toBe(2025); expect(data.colecao).toBe('11'); expect(data.m).toHaveLength(540); expect(data.m.every(m => m[2].length === 41)).toBe(true); expect(data.m.find(m => m[0] === 'Marabá')?.[2][15]).toBe(71.05); });
 });

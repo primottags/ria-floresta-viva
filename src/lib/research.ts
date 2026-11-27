@@ -1,8 +1,8 @@
 export type Municipality = [string, number, number[]];
 export interface ForestData { ano0: number; anoN: number; colecao: string; m: Municipality[] }
 export type Residence = 'sim' | 'visita' | 'saiu';
-export const CONSENT = 'Esta página faz parte de uma pesquisa sobre como cada geração lembra a floresta da Amazônia. Se você concordar, guardamos seu município, seu ano de nascimento e seus chutes. Não pedimos nome, e-mail ou telefone, e não gravamos seu IP junto da resposta. As respostas só aparecem somadas, em gráficos e tabelas. Participar é voluntário e só vale para maiores de 18 anos.';
-const UF: Record<string, string> = { '11': 'RO', '12': 'AC', '13': 'AM', '14': 'RR', '15': 'PA', '16': 'AP', '17': 'TO', '21': 'MA', '51': 'MT' };
+export const CONSENT = 'Esta página faz parte de uma pesquisa sobre como cada geração lembra a paisagem natural do seu município: a floresta, a mata, o cerrado, a caatinga ou o campo nativo. Se você concordar, guardamos o bioma escolhido, seu município, seu ano de nascimento e seus chutes. Não pedimos nome, e-mail ou telefone, e não gravamos seu IP junto da resposta. As respostas só aparecem somadas, em gráficos e tabelas. Participar é voluntário e só vale para maiores de 18 anos.';
+const UF: Record<string, string> = { '11': 'RO', '12': 'AC', '13': 'AM', '14': 'RR', '15': 'PA', '16': 'AP', '17': 'TO', '21': 'MA', '22': 'PI', '23': 'CE', '24': 'RN', '25': 'PB', '26': 'PE', '27': 'AL', '28': 'SE', '29': 'BA', '31': 'MG', '32': 'ES', '33': 'RJ', '35': 'SP', '41': 'PR', '42': 'SC', '43': 'RS', '50': 'MS', '51': 'MT', '52': 'GO', '53': 'DF' };
 /** Sigla do estado a partir dos dois primeiros dígitos do código IBGE. */
 export const ufOf = (cod: number) => UF[String(cod).slice(0, 2)] ?? '';
 export const normalize = (text: string) => text.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLocaleLowerCase('pt-BR');
@@ -55,6 +55,6 @@ export function panelHeadline(data: PanelData) {
   const top = [...data.geracoes].sort((a, b) => Math.abs(b.diferenca) - Math.abs(a.diferenca))[0];
   if (!top) return null;
   const pts = Math.abs(Math.round(top.diferenca));
-  if (pts === 0) return `Quem nasceu em ${top.rotulo} lembra a floresta quase exatamente como o satélite registrou.`;
-  return `Quem nasceu em ${top.rotulo} lembra, em média, ${pts} ${pts === 1 ? 'ponto' : 'pontos'} ${top.diferenca > 0 ? 'a mais' : 'a menos'} de floresta do que o satélite registrou.`;
+  if (pts === 0) return `Quem nasceu em ${top.rotulo} lembra a paisagem quase exatamente como o satélite registrou.`;
+  return `Quem nasceu em ${top.rotulo} lembra, em média, ${pts} ${pts === 1 ? 'ponto' : 'pontos'} ${top.diferenca > 0 ? 'a mais' : 'a menos'} de paisagem nativa do que o satélite registrou.`;
 }

@@ -22,7 +22,11 @@ async function loadMap(cod: number) {
  * Cartão 1080×1350 para compartilhar: "eu lembrava X%, era Y%", com o mapa real do
  * MapBiomas no ano da lembrança e em 2025. Sem mapa, mostra barras.
  */
-export async function createShareCard(name: string, year: number, guess: number, past: number, today: number, message = '', cod?: number) {
+/** Palavras do bioma no cartão. O padrão é o da Amazônia. */
+export type CardTheme = { title: string; noun: string; legend: string; ask: string };
+const AMAZONIA: CardTheme = { title: 'A floresta da sua infância', noun: 'floresta', legend: 'floresta', ask: 'E você, quanta floresta lembra?' };
+
+export async function createShareCard(name: string, year: number, guess: number, past: number, today: number, message = '', cod?: number, theme: CardTheme = AMAZONIA) {
   await document.fonts.ready;
   const canvas = document.createElement('canvas'); canvas.width = 1080; canvas.height = 1350;
   const ctx = canvas.getContext('2d'); if (!ctx) throw new Error('Não foi possível criar a imagem.');
@@ -31,7 +35,7 @@ export async function createShareCard(name: string, year: number, guess: number,
   const forest = color('--share-forest'); const memory = color('--share-memory'); const earth = color('--share-earth');
   ctx.fillStyle = color('--share-background'); ctx.fillRect(0, 0, 1080, 1350);
 
-  ctx.fillStyle = forest; ctx.font = '600 29px "Atkinson Hyperlegible"'; ctx.fillText('A FLORESTA DA SUA INFÂNCIA', 80, 110);
+  ctx.fillStyle = forest; ctx.font = '600 29px "Atkinson Hyperlegible"'; ctx.fillText(theme.title.toUpperCase(), 80, 110);
   ctx.font = '700 72px "Bricolage Grotesque"';
   let y = 195;
   const nameLines = wrap(ctx, name, 920).slice(0, 2);
@@ -43,7 +47,7 @@ export async function createShareCard(name: string, year: number, guess: number,
   ctx.fillStyle = forest;
   ctx.fillText('Eu lembrava ', 80, y); let x = 80 + ctx.measureText('Eu lembrava ').width;
   ctx.fillStyle = memory; ctx.fillText(`${guess}%`, x, y); x += ctx.measureText(`${guess}%`).width;
-  ctx.fillStyle = forest; ctx.fillText(` de floresta.`, x, y);
+  ctx.fillStyle = forest; ctx.fillText(` de ${theme.noun}.`, x, y);
   y += 62;
   ctx.font = '36px "Atkinson Hyperlegible"';
   ctx.fillText(`O satélite mostra ${Math.round(past)}% em ${year} e ${Math.round(today)}% hoje.`, 80, y);
@@ -61,15 +65,15 @@ export async function createShareCard(name: string, year: number, guess: number,
       ctx.fillStyle = '#ffffff'; ctx.fillRect(left, y + 18, box, box);
       const frame = Math.max(0, Math.min(40, (yr as number) - 1985));
       ctx.drawImage(map.img, 0, frame * map.h, map.w, map.h, left + (box - dw) / 2, y + 18 + (box - dh) / 2, dw, dh);
-      ctx.fillStyle = tone as string; ctx.font = '700 46px "Bricolage Grotesque"'; ctx.fillText(`${Math.round(value as number)}% floresta`, left, y + 18 + box + 58);
+      ctx.fillStyle = tone as string; ctx.font = '700 46px "Bricolage Grotesque"'; ctx.fillText(`${Math.round(value as number)}% ${theme.noun}`, left, y + 18 + box + 58);
     });
     y += 18 + box + 58;
     ctx.font = '22px "Atkinson Hyperlegible"'; ctx.fillStyle = forest;
-    const legend: [string, string][] = [['#1f8d49', 'Floresta'], ['#edde8e', 'Outros usos'], ['#2e7dd7', 'Água']];
+    const legend: [string, string][] = [['#1f8d49', theme.legend.charAt(0).toUpperCase() + theme.legend.slice(1)], ['#edde8e', 'Outros usos'], ['#2e7dd7', 'Água']];
     let lx = 80; y += 44;
     for (const [c, label] of legend) { ctx.fillStyle = c; ctx.fillRect(lx, y - 18, 22, 22); ctx.fillStyle = forest; ctx.fillText(label, lx + 32, y); lx += 32 + ctx.measureText(label).width + 36; }
   } else {
-    const values = [[`Minha lembrança de ${year}`, guess, memory], [`A floresta em ${year}`, Math.round(past), forest], ['A floresta em 2025', Math.round(today), earth]] as const;
+    const values = [[`Minha lembrança de ${year}`, guess, memory], [`Satélite em ${year}`, Math.round(past), forest], ['Satélite em 2025', Math.round(today), earth]] as const;
     values.forEach(([label, value, tone], i) => { const top = y + i * 150; ctx.fillStyle = forest; ctx.font = '32px "Atkinson Hyperlegible"'; ctx.fillText(label, 80, top); ctx.fillStyle = tone; ctx.font = '700 80px "Bricolage Grotesque"'; ctx.fillText(`${value}%`, 80, top + 86); ctx.fillRect(330, top + 30, value * 6.7, 50); });
     y += 3 * 150;
   }
@@ -80,7 +84,7 @@ export async function createShareCard(name: string, year: number, guess: number,
     y += 56;
     for (const line of wrap(ctx, `“${message}”`, 920).slice(0, 2)) { ctx.fillText(line, 80, y); y += 44; }
   }
-  ctx.fillStyle = forest; ctx.font = '700 44px "Bricolage Grotesque"'; ctx.fillText('E você, quanta floresta lembra?', 80, Math.max(y + 60, 1180));
+  ctx.fillStyle = forest; ctx.font = '700 44px "Bricolage Grotesque"'; ctx.fillText(theme.ask, 80, Math.max(y + 60, 1180));
   ctx.font = '24px "Atkinson Hyperlegible"'; ctx.fillText('Fonte: Projeto MapBiomas · Coleção 11 · 1985–2025', 80, 1260); ctx.fillText('Pesquisa de Priscila Motta Gadelha Silva', 80, 1296);
   return new Promise<File>((resolve, reject) => canvas.toBlob(blob => blob ? resolve(new File([blob], 'a-floresta-da-sua-infancia.png', { type: 'image/png' })) : reject(new Error('Não foi possível criar a imagem.')), 'image/png'));
 }
