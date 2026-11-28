@@ -5,14 +5,38 @@ const trees = Array.from({ length: 100 }, (_, i) => {
   return { rank: (i * 37 + 11) % 100, x: (index + .5) * (1440 / count) + Math.sin(i * 2.7) * 13, y: ([365, 438, 525][row] ?? 525) + Math.sin(i * 1.9) * 18, size: ([.42, .7, 1.04][row] ?? 1.04) + (i % 3) * .07, tone: (i + row) % 4 };
 }).sort((a, b) => a.y - b.y);
 
-function Tree({ x, y, size, tone, visible, stump }: { x: number; y: number; size: number; tone: number; visible: boolean; stump: boolean }) {
+/** Desenho de cada tipo de planta, com a base em (0, 0). */
+type Plant = 'copa' | 'araucaria' | 'retorcida' | 'galhos' | 'mandacaru' | 'capim' | 'capao' | 'caranda';
+
+/** Que planta aparece em cada posição, conforme o bioma. A Amazônia fica como era. */
+export function plantFor(biome: string, i: number): Plant {
+  switch (biome) {
+    case 'mata-atlantica': return i % 4 === 1 ? 'araucaria' : 'copa';
+    case 'cerrado': return i % 3 === 0 ? 'capim' : 'retorcida';
+    case 'caatinga': return i % 4 === 2 ? 'mandacaru' : i % 5 === 0 ? 'capim' : 'galhos';
+    case 'pampa': return i % 7 === 3 ? 'capao' : 'capim';
+    case 'pantanal': return i % 3 === 0 ? 'caranda' : i % 3 === 1 ? 'capim' : 'capao';
+    default: return 'copa';
+  }
+}
+
+function PlantShape({ plant }: { plant: Plant }) {
+  switch (plant) {
+    case 'araucaria': return <><path className="tree-trunk" d="M-3 0 0-150 3 0Z" /><path d="M-62-140C-40-160 40-160 62-140C40-148-40-148-62-140Z" /><path d="M-52-118C-34-134 34-134 52-118C34-125-34-125-52-118Z" /><path d="M-40-96C-26-108 26-108 40-96C26-102-26-102-40-96Z" /><path className="tree-vein" d="M0-140V-96M0-112-30-128M0-108 30-126" /></>;
+    case 'retorcida': return <><path className="tree-trunk" d="M-3 0C-8-18 4-30-6-50L-1-52C8-32-3-18 4 0Z" /><path d="M-44-58C-48-74-24-84-8-76C2-92 32-90 38-72C54-70 52-52 36-54C22-44-8-46-20-52C-36-46-50-50-44-58Z" /><path className="tree-vein" d="M-4-50-24-64M-4-52 18-72" /></>;
+    case 'galhos': return <><path className="tree-trunk" d="M-3 0-1-40 3 0Z" /><path className="tree-branch" d="M-1-38-26-70-34-92M-26-70-12-96M-1-38 4-74 0-104M4-74 24-96M-1-38 24-58 40-80M24-58 30-46" /><path d="M-38-96a7 6 0 1 1 9 2ZM-14-100a7 6 0 1 1 7 2ZM-2-108a7 6 0 1 1 7 2ZM22-100a7 6 0 1 1 7 2ZM38-84a7 6 0 1 1 7 2Z" /></>;
+    case 'mandacaru': return <path d="M-7 0V-118a7 7 0 0 1 14 0V0ZM7-52h12a6 6 0 0 0 6-6V-92a6 6 0 0 0-12 0v28H7ZM-7-38h-12a6 6 0 0 1-6-6V-78a6 6 0 0 1 12 0v28h6Z" />;
+    case 'capim': return <path transform="scale(.8)" d="M-34 0C-32-18-26-32-16-40C-20-26-18-12-12 0ZM-14 0C-12-28-4-46 6-56C0-36 2-18 8 0ZM4 0C8-22 18-36 32-40C24-26 20-12 22 0ZM-22 0C-26-14-36-22-46-24C-40-16-36-8-36 0Z" />;
+    case 'capao': return <><path className="tree-trunk" d="M-3 0 0-60 4 0Z" /><path d="M0-118C-30-118-46-96-40-78C-56-70-50-46-30-48C-20-34 20-34 30-48C50-46 56-70 40-78C46-96 30-118 0-118Z" /></>;
+    case 'caranda': return <><path className="tree-trunk" d="M-3 0-1-128h3L3 0Z" /><path d="M0-128-40-140-8-136-38-164-4-142-18-178 2-146 8-182 8-144 32-170 10-138 44-150 10-130 40-124 4-124Z" /></>;
+    default: return <><path className="tree-trunk" d="M-4 0 0-88 5 0Z" /><path d="M0-146C-21-144-30-129-27-113C-49-115-60-96-53-78C-74-62-61-34-40-36C-31-11-8-21 0-25C21-11 41-21 43-38C71-33 77-64 57-79C65-100 48-118 30-114C34-132 16-148 0-146Z" /><path className="tree-vein" d="M0-27V-126M0-64-27-87M0-80 23-101" /></>;
+  }
+}
+
+function Tree({ x, y, size, tone, visible, stump, plant }: { x: number; y: number; size: number; tone: number; visible: boolean; stump: boolean; plant: Plant }) {
   return <g transform={`translate(${x} ${y}) scale(${size})`}>
     {stump && <g className={visible ? 'scene-stump hidden-stump' : 'scene-stump'}><ellipse cx="0" cy="0" rx="34" ry="8" /><path d="M-8 0V-14H8V0" /></g>}
-    <g className={`tree tree-tone-${tone} ${visible ? '' : 'tree-gone'}`}>
-      <path className="tree-trunk" d="M-4 0 0-88 5 0Z" />
-      <path d="M0-146C-21-144-30-129-27-113C-49-115-60-96-53-78C-74-62-61-34-40-36C-31-11-8-21 0-25C21-11 41-21 43-38C71-33 77-64 57-79C65-100 48-118 30-114C34-132 16-148 0-146Z" />
-      <path className="tree-vein" d="M0-27V-126M0-64-27-87M0-80 23-101" />
-    </g>
+    <g className={`tree tree-tone-${tone} plant-${plant} ${visible ? '' : 'tree-gone'}`}><PlantShape plant={plant} /></g>
   </g>;
 }
 
@@ -74,18 +98,18 @@ function FrontMemories({ list }: { list: readonly string[] }) {
 
 export const levelY = (pct: number) => 505 - pct * 4;
 
-export function Landscape({ cover, ghost, intro = false, stumps = false, emptyLabel = false, memories }: { cover: number; ghost?: number | undefined; intro?: boolean; stumps?: boolean; emptyLabel?: boolean; memories?: readonly string[] | undefined }) {
+export function Landscape({ cover, ghost, intro = false, stumps = false, emptyLabel = false, memories, biome = 'amazonia' }: { cover: number; ghost?: number | undefined; intro?: boolean; stumps?: boolean; emptyLabel?: boolean; memories?: readonly string[] | undefined; biome?: string }) {
   const count = Math.round(cover);
-  return <svg className={`landscape ${intro ? 'landscape-intro' : ''}`} viewBox="0 0 1440 560" preserveAspectRatio="xMidYMax slice" aria-hidden="true">
+  return <svg className={`landscape bioma-${biome} ${intro ? 'landscape-intro' : ''}`} viewBox="0 0 1440 560" preserveAspectRatio="xMidYMax slice" aria-hidden="true">
     <circle className="scene-sun" cx="1160" cy="112" r="55" />
     <g className="scene-cloud"><path transform="translate(300 10)" d="M207 91c9-17 28-17 39-4 12-23 42-17 46 2h37c8 0 8 9 0 9H195c-8 0-7-7 1-7Z"/><path d="M932 172c10-15 28-14 35-4 12-17 34-12 38 3h24c10 0 10 8 0 8H919c-8 0-8-7 0-7Z"/></g>
     <path className="scene-hill-far" d="M0 285Q140 165 295 279Q440 341 600 284Q769 225 920 278Q1100 171 1240 262Q1361 220 1440 240V560H0Z" />
     <path className="scene-hill-near" d="M0 325Q189 250 364 343Q555 279 719 327Q916 362 1077 294Q1292 239 1440 323V560H0Z" />
     <path className="scene-earth" d="M0 370Q240 307 477 357Q730 412 932 343Q1190 306 1440 356V560H0Z" />
     <path className="scene-furrows" d="M90 445c150-28 306-26 452 2m269 13c175-37 350-35 523-7M140 520c210-34 400-27 584 8m154 0c181-24 337-24 474-2" />
-    {intro && <><path className="scene-river" d="M743 351C667 385 837 393 784 423C744 454 558 480 561 560H848C783 481 918 447 842 414C761 382 775 367 787 350Z"/><path className="scene-river-light" d="M754 367c-35 18 57 24 56 42M779 445c-40 16-106 43-113 61"/></>}
+    {intro && biome !== 'caatinga' && <><path className="scene-river" d="M743 351C667 385 837 393 784 423C744 454 558 480 561 560H848C783 481 918 447 842 414C761 382 775 367 787 350Z"/><path className="scene-river-light" d="M754 367c-35 18 57 24 56 42M779 445c-40 16-106 43-113 61"/></>}
     {memories && <GroundMemories list={memories} />}
-    {trees.map((tree, i) => <Tree key={i} {...tree} visible={tree.rank < count} stump={stumps} />)}
+    {trees.map((tree, i) => <Tree key={i} {...tree} plant={plantFor(biome, tree.rank)} visible={tree.rank < count} stump={stumps} />)}
     {memories && <FrontMemories list={memories} />}
     <g className="scene-birds" fill="none"><path d="m1070 150 9-4 8 5m-47-24 8-4 7 4m-796 78 8-4 8 4"/></g>
     {emptyLabel && <text className="scene-hint" x="720" y="245" textAnchor="middle">Toque abaixo para plantar sua lembrança</text>}

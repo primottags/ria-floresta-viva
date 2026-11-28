@@ -1,0 +1,37 @@
+# Gera texturas, mapas e fotos dos outros biomas no Earth Engine e grava no branch imagens-biomas.
+# Para rodar: enviar qualquer commit para o branch "gerar-imagens".
+# Precisa do segredo GEE_CHAVE_JSON (chave JSON de uma conta de serviço registrada no Earth Engine).
+name: Imagens dos biomas
+on:
+  push:
+    branches: [gerar-imagens]
+permissions:
+  contents: write
+jobs:
+  gerar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 340
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: imagens-biomas
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install earthengine-api requests pillow
+      - name: Gerar imagens
+        env:
+          GEE_CHAVE_JSON: ${{ secrets.GEE_CHAVE_JSON }}
+        run: |
+          printf '%s' "$GEE_CHAVE_JSON" > "$RUNNER_TEMP/chave.json"
+          python pesquisa/gerar_imagens_brasil.py --chave "$RUNNER_TEMP/chave.json"
+          rm -f "$RUNNER_TEMP/chave.json"
+      - name: Gravar no branch
+        if: always()
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add public/texturas public/mapas public/mapas-nativa public/fotos
+          git commit -m "Imagens dos outros biomas (Earth Engine)" || exit 0
+          git pull --rebase origin imagens-biomas
+          git push origin HEAD:imagens-biomas

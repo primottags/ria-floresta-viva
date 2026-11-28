@@ -535,3 +535,11 @@ details.number-alt label { display:flex; justify-content:center; align-items:cen
 .biome-pampa { --bioma-cor: #8fb35a; }
 .biome-pantanal { --bioma-cor: #3c8fa3; }
 @media (max-width: 640px) { .biome-grid { grid-template-columns: 1fr 1fr; } .biome-card { padding-left: 40px; } .biome-card::before { left: 12px; width: 18px; height: 18px; } }
+
+/* Paisagem do topo por bioma: muda a planta (Landscape.tsx) e o tom das folhas. */
+.landscape .tree-branch { fill:none; stroke:var(--trunk); stroke-width:4; stroke-linecap:round; }
+.bioma-mata-atlantica { --leaf-one: oklch(.41 .1 150); --leaf-two: oklch(.5 .1 146); }
+.bioma-cerrado { --leaf-one: oklch(.5 .085 128); --leaf-two: oklch(.58 .09 118); --leaf-three: oklch(.44 .07 135); --leaf-four: oklch(.36 .06 130); --land: oklch(.66 .09 55); }
+.bioma-caatinga { --leaf-one: oklch(.55 .05 125); --leaf-two: oklch(.62 .05 110); --leaf-three: oklch(.48 .06 140); --leaf-four: oklch(.38 .05 120); --hill-far: oklch(.83 .04 90); --hill-near: oklch(.74 .05 80); --land: oklch(.72 .07 65); }
+.bioma-pampa { --leaf-one: oklch(.6 .1 130); --leaf-two: oklch(.68 .1 120); --leaf-three: oklch(.52 .09 138); --leaf-four: oklch(.4 .08 150); }
+.bioma-pantanal { --leaf-one: oklch(.48 .1 145); --leaf-two: oklch(.6 .1 128); --leaf-three: oklch(.4 .08 150); --leaf-four: oklch(.34 .07 152); }
